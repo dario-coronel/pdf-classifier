@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Buscar Documentos - PDF Classifier{% endblock %}
+{% block page_title %}Buscar Documentos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-search"></i> Filtros de Búsqueda
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="searchForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Tipo de Documento</label>
+                            <select class="form-select" id="filterType">
+                                <option value="">Todos</option>
+                                {% for doc_type in document_types %}
+                                <option value="{{ doc_type.name }}">{{ doc_type.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="filterStatus">
+                                <option value="">Todos</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="analyzing">Analizando</option>
+                                <option value="classified">Clasificado</option>
+                                <option value="validated">Validado</option>
+                                <option value="error">Error</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Fecha Desde</label>
+                            <input type="date" class="form-control" id="filterDateFrom">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Fecha Hasta</label>
+                            <input type="date" class="form-control" id="filterDateTo">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">CUIT</label>
+                            <input type="text" class="form-control" id="filterCuit" placeholder="XX-XXXXXXXX-X">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Proveedor</label>
+                            <input type="text" class="form-control" id="filterProvider" placeholder="Nombre del proveedor">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Límite de Resultados</label>
+                            <select class="form-select" id="filterLimit">
+                                <option value="50">50</option>
+                                <option value="100" selected>100</option>
+                                <option value="500">500</option>
+                                <option value="1000">1000</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-primary" onclick="searchDocuments()">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="clearFilters()">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="exportResults()">
+                                <i class="fas fa-file-excel"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list"></i> Resultados de Búsqueda
+                    <span id="resultCount" class="badge bg-info ms-2">0</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="resultsContainer">
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-search fa-3x mb-3"></i>
+                        <p>Use los filtros para buscar documentos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let searchResults = [];
+    
+    function searchDocuments() {
+        const params = new URLSearchParams({
+            type: document.getElementById('filterType').value,
+            status: document.getElementById('filterStatus').value,
+            date_from: document.getElementById('filterDateFrom').value,
+            date_to: document.getElementById('filterDateTo').value,
+            cuit: document.getElementById('filterCuit').value,
+            provider: document.getElementById('filterProvider').value,
+            limit: document.getElementById('filterLimit').value
+        });
+        
+        // Remove empty params
+        for (let [key, value] of [...params.entries()]) {
+            if (!value) params.delete(key);
+        }
+        
+        showLoading();
+        fetch(`/api/documents?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    searchResults = data.documents;
+                    displayResults(data.documents);
+                } else {
+                    showToast('Error en la búsqueda', 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showToast('Error: ' + error, 'danger');
+            });
+    }
+    
+    function displayResults(documents) {
+        const container = document.getElementById('resultsContainer');
+        document.getElementById('resultCount').textContent = documents.length;
+        
+        if (documents.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No se encontraron documentos</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let tableHtml = `
+            <div class="table-responsive">
+                <table class="table table-hover" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Fecha Doc.</th>
+                            <th>Proveedor</th>
+                            <th>CUIT</th>
+                            <th>Monto</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        documents.forEach(doc => {
+            const statusBadge = getStatusBadge(doc.status);
+            const typeBadge = doc.document_type ? `<span class="badge bg-info">${doc.document_type}</span>` : '-';
+            
+            tableHtml += `
+                <tr>
+                    <td>${doc.id}</td>
+                    <td><small>${doc.original_filename}</small></td>
+                    <td>${typeBadge}</td>
+                    <td>${statusBadge}</td>
+                    <td><small>${doc.document_date || '-'}</small></td>
+                    <td><small>${doc.provider ? doc.provider.substring(0, 30) : '-'}</small></td>
+                    <td><small>${doc.cuit || '-'}</small></td>
+                    <td><small>${doc.total_amount ? '$' + parseFloat(doc.total_amount).toFixed(2) : '-'}</small></td>
+                    <td>
+                        <a href="/documents/view/${doc.id}" class="btn btn-sm btn-primary" target="_blank">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = tableHtml;
+        
+        // Initialize DataTable
+        $('#resultsTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[0, 'desc']]
+        });
+    }
+    
+    function getStatusBadge(status) {
+        const badges = {
+            'pending': '<span class="badge bg-secondary">Pendiente</span>',
+            'analyzing': '<span class="badge bg-info">Analizando</span>',
+            'classified': '<span class="badge bg-warning">Clasificado</span>',
+            'validated': '<span class="badge bg-success">Validado</span>',
+            'error': '<span class="badge bg-danger">Error</span>'
+        };
+        return badges[status] || '<span class="badge bg-secondary">-</span>';
+    }
+    
+    function clearFilters() {
+        document.getElementById('searchForm').reset();
+        document.getElementById('resultsContainer').innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-search fa-3x mb-3"></i>
+                <p>Use los filtros para buscar documentos</p>
+            </div>
+        `;
+        document.getElementById('resultCount').textContent = '0';
+    }
+    
+    function exportResults() {
+        if (searchResults.length === 0) {
+            alert('No hay resultados para exportar');
+            return;
+        }
+        
+        // Simple CSV export
+        let csv = 'ID,Nombre,Tipo,Estado,Fecha,Proveedor,CUIT,Monto\n';
+        searchResults.forEach(doc => {
+            csv += `${doc.id},"${doc.original_filename}","${doc.document_type || ''}","${doc.status}",` +
+                   `"${doc.document_date || ''}","${doc.provider || ''}","${doc.cuit || ''}","${doc.total_amount || ''}"
+`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `documentos_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+</script>
+{% endblock %}

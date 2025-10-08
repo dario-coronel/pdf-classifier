@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle del Documento - PDF Classifier{% endblock %}
+{% block page_title %}Detalle del Documento #{{ document.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <!-- PDF Viewer -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-file-pdf"></i> Documento Original
+                </h6>
+            </div>
+            <div class="card-body">
+                <div style="height: 600px;">
+                    {# Determinar carpeta según estado #}
+                    {% if document.status == 'pending' %}
+                        <embed src="/uploads/pending/{{ document.filename }}" type="application/pdf" width="100%" height="100%" />
+                    {% elif document.status == 'classified' or document.status == 'validated' %}
+                        <embed src="/uploads/classified/{{ document.document_type.name if document.document_type else 'Desconocido' }}/{{ document.filename }}" type="application/pdf" width="100%" height="100%" />
+                    {% else %}
+                        <span class="text-danger">No se puede mostrar el PDF para este estado.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Document Information -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-info-circle"></i> Información del Documento
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Nombre Original:</div>
+                    <div class="col-sm-8">{{ document.original_filename }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Tipo de Documento:</div>
+                    <div class="col-sm-8">
+                        {% if document.document_type %}
+                        <span class="badge bg-info">{{ document.document_type.name }}</span>
+                        {% else %}
+                        <span class="text-muted">Sin clasificar</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Estado:</div>
+                    <div class="col-sm-8">
+                        {% if document.status == 'validated' %}
+                        <span class="badge bg-success">Validado</span>
+                        {% elif document.status == 'classified' %}
+                        <span class="badge bg-warning">Clasificado</span>
+                        {% elif document.status == 'pending' %}
+                        <span class="badge bg-secondary">Pendiente</span>
+                        {% elif document.status == 'error' %}
+                        <span class="badge bg-danger">Error</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Confianza:</div>
+                    <div class="col-sm-8">
+                        {% if document.confidence_score %}
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar 
+                                {% if document.confidence_score > 0.7 %}bg-success
+                                {% elif document.confidence_score > 0.5 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                                role="progressbar"
+                                style="width: {{ (document.confidence_score * 100)|round }}%">
+                                {{ (document.confidence_score * 100)|round }}%
+                            </div>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Tamaño del Archivo:</div>
+                    <div class="col-sm-8">{{ (document.file_size / 1024)|round(2) }} KB</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Fecha de Carga:</div>
+                    <div class="col-sm-8">{{ document.created_at.strftime('%d/%m/%Y %H:%M:%S') }}</div>
+                </div>
+                {% if document.processed_at %}
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Fecha de Procesamiento:</div>
+                    <div class="col-sm-8">{{ document.processed_at.strftime('%d/%m/%Y %H:%M:%S') }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Extracted Data -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-database"></i> Datos Extraídos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">CUIT:</div>
+                    <div class="col-sm-8">{{ document.cuit or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Proveedor:</div>
+                    <div class="col-sm-8">{{ document.provider or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Fecha del Documento:</div>
+                    <div class="col-sm-8">
+                        {{ document.document_date.strftime('%d/%m/%Y') if document.document_date else '-' }}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Número de Documento:</div>
+                    <div class="col-sm-8">{{ document.document_number or '-' }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 font-weight-bold">Monto Total:</div>
+                    <div class="col-sm-8">
+                        {% if document.total_amount %}
+                        ${{ "{:,.2f}".format(document.total_amount) }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Extracted Text -->
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-file-alt"></i> Texto Extraído
+                </h6>
+            </div>
+            <div class="card-body">
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <pre class="bg-light p-3 rounded">{{ document.extracted_text or 'No hay texto extraído' }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Actions -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-cogs"></i> Acciones
+                </h6>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-primary w-100 mb-2" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary w-100 mb-2">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+                {% if not document.is_validated %}
+                <hr>
+                <button class="btn btn-success w-100" onclick="showValidateModal()">
+                    <i class="fas fa-check"></i> Validar Documento
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        {% if document.error_message %}
+        <div class="card shadow border-danger">
+            <div class="card-header py-3 bg-danger text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-exclamation-triangle"></i> Error
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-danger mb-0">{{ document.error_message }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

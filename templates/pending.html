@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Validar Documentos - PDF Classifier{% endblock %}
+{% block page_title %}Validar Documentos{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Instrucciones:</strong> Revise los documentos clasificados y valide o corrija el tipo de documento antes de proceder.
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-clipboard-check"></i> Documentos Pendientes de Validación
+                </h6>
+                <button class="btn btn-success" onclick="validateAll()" id="validateAllBtn">
+                    <i class="fas fa-check-double"></i> Validar Seleccionados
+                </button>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="pendingTable">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
+                                <th>Nombre</th>
+                                <th>Tipo Predicho</th>
+                                <th>Confianza</th>
+                                <th>Fecha Documento</th>
+                                <th>Proveedor</th>
+                                <th>CUIT</th>
+                                <th>Validar Como</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="doc-checkbox" value="{{ doc.id }}">
+                                </td>
+                                <td>
+                                    <i class="fas fa-file-pdf text-danger"></i>
+                                    <small>{{ doc.original_filename }}</small>
+                                </td>
+                                <td>
+                                    {% if doc.predicted_type %}
+                                    <span class="badge 
+                                        {% if doc.confidence_score and doc.confidence_score > 0.7 %}bg-success
+                                        {% elif doc.confidence_score and doc.confidence_score > 0.5 %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ doc.predicted_type.name }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if doc.confidence_score %}
+                                    <small>{{ (doc.confidence_score * 100)|round }}%</small>
+                                    {% else %}
+                                    <small class="text-muted">N/A</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if doc.document_date %}
+                                    <small>{{ doc.document_date.strftime('%d/%m/%Y') }}</small>
+                                    {% else %}
+                                    <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if doc.provider %}
+                                    <small>{{ doc.provider[:30] }}...</small>
+                                    {% else %}
+                                    <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if doc.cuit %}
+                                    <small>{{ doc.cuit }}</small>
+                                    {% else %}
+                                    <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <select class="form-select form-select-sm doc-type-select" data-doc-id="{{ doc.id }}">
+                                        {% for doc_type in document_types %}
+                                        <option value="{{ doc_type.name }}" 
+                                            {% if doc.predicted_type and doc_type.id == doc.predicted_type.id %}selected{% endif %}>
+                                            {{ doc_type.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-success" onclick="validateSingle({{ doc.id }})">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <a href="{{ url_for('view_document', doc_id=doc.id) }}" 
+                                       class="btn btn-sm btn-info" target="_blank">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                    <h5>¡No hay documentos pendientes de validación!</h5>
+                    <p class="text-muted">Todos los documentos han sido procesados.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#pendingTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            order: [[1, 'asc']]
+        });
+    });
+    
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.doc-checkbox');
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    }
+    
+    function validateSingle(docId) {
+        const select = document.querySelector(`.doc-type-select[data-doc-id="${docId}"]`);
+        const docType = select.value;
+        
+        if (!confirm(`¿Validar como "${docType}"?`)) return;
+        
+        showLoading();
+        fetch('/api/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                document_id: docId,
+                document_type: docType,
+                user: 'admin'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showToast('Documento validado correctamente', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Error al validar documento: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showToast('Error: ' + error, 'danger');
+        });
+    }
+    
+    function validateAll() {
+        const checkboxes = document.querySelectorAll('.doc-checkbox:checked');
+        
+        if (checkboxes.length === 0) {
+            alert('Por favor seleccione al menos un documento');
+            return;
+        }
+        
+        if (!confirm(`¿Validar ${checkboxes.length} documentos?`)) return;
+        
+        const validations = [];
+        checkboxes.forEach(cb => {
+            const docId = cb.value;
+            const select = document.querySelector(`.doc-type-select[data-doc-id="${docId}"]`);
+            validations.push({
+                document_id: parseInt(docId),
+                document_type: select.value,
+                user: 'admin'
+            });
+        });
+        
+        showLoading();
+        fetch('/api/validate-batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ validations })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('Error: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showToast('Error: ' + error, 'danger');
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración - PDF Classifier{% endblock %}
+{% block page_title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-tags"></i> Tipos de Documentos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Estado</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc_type in document_types %}
+                            <tr>
+                                <td>{{ doc_type.name }}</td>
+                                <td>
+                                    {% if doc_type.is_active %}
+                                    <span class="badge bg-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ doc_type.documents|length }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-folder"></i> Configuración de Carpetas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="font-weight-bold">Carpeta de Carga:</label>
+                    <p class="text-muted"><code>uploads/pending</code></p>
+                    <small>Coloque los archivos PDF aquí para ser procesados</small>
+                </div>
+                <div class="mb-3">
+                    <label class="font-weight-bold">Carpeta de Clasificados:</label>
+                    <p class="text-muted"><code>uploads/classified</code></p>
+                    <small>Los documentos validados se mueven aquí, organizados por tipo</small>
+                </div>
+                <hr>
+                <button class="btn btn-primary" onclick="openFolder('pending')">
+                    <i class="fas fa-folder-open"></i> Abrir Carpeta de Carga
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-brain"></i> Modelo de Machine Learning
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="font-weight-bold">Estado del Modelo:</label>
+                    <p><span class="badge bg-success">Operativo</span></p>
+                </div>
+                <div class="mb-3">
+                    <label class="font-weight-bold">Confianza Mínima:</label>
+                    <p>60%</p>
+                </div>
+                <button class="btn btn-warning" onclick="retrainModel()">
+                    <i class="fas fa-sync"></i> Reentrenar Modelo
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-info-circle"></i> Información del Sistema
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>Versión:</strong> 1.0.0
+                </div>
+                <div class="mb-2">
+                    <strong>Base de Datos:</strong> MySQL
+                </div>
+                <div class="mb-2">
+                    <strong>OCR:</strong> Tesseract
+                </div>
+                <div class="mb-2">
+                    <strong>ML Framework:</strong> scikit-learn
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openFolder(folder) {
+        alert('Abra la carpeta manualmente en: uploads/' + folder);
+    }
+</script>
+{% endblock %}
