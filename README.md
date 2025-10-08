@@ -1,4 +1,4 @@
-# 📄 PDF Classifier - Sistema de Clasificación de Documentos
+# 📄 PDF Classifier - Sistema de Clasificación de Documento
 
 Sistema avanzado de clasificación automática de documentos PDF usando Machine Learning, OCR y extracción inteligente de datos.
 
@@ -142,149 +142,51 @@ Después de validar varios documentos:
 curl -X POST http://localhost:5000/api/retrain-model
 ```
 
-## 📁 Estructura del Proyecto
+## ⚙️ Variables de Entorno
+
+Copia `.env.example` a `.env` y configura:
+- DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+- TESSERACT_PATH (ruta a tesseract.exe)
+- Otros paths según tu entorno
+
+## 📂 Estructura del Proyecto
 
 ```
-pdf-classifier/
-├── app.py                      # Aplicación Flask principal
-├── config.py                   # Configuración
-├── requirements.txt            # Dependencias
-├── .env                        # Variables de entorno
-├── database/
-│   └── schema.sql             # Schema de la base de datos
-├── models/
-│   ├── __init__.py
-│   └── document.py            # Modelos SQLAlchemy
-├── services/
-│   ├── pdf_processor.py       # Procesamiento de PDFs y OCR
-│   ├── classifier.py          # Clasificador ML
-│   └── document_service.py    # Lógica de negocio
-├── templates/
-│   ├── base.html             # Template base
-│   ├── dashboard.html        # Dashboard principal
-│   ├── pending.html          # Validación de documentos
-│   ├── search.html           # Búsqueda de documentos
-│   ├── document_detail.html  # Detalle del documento
-│   └── settings.html         # Configuración
-└── uploads/
-    ├── pending/              # PDFs para procesar
-    ├── classified/           # PDFs clasificados
-    │   ├── Factura/
-    │   ├── Nota de Debito/
-    │   ├── Nota de Credito/
-    │   ├── Remito/
-    │   └── Desconocido/
-    └── temp/                 # Archivos temporales
+├── app.py                  # App principal Flask
+├── config.py               # Configuración
+├── models/                 # Modelos de base de datos y ML
+├── services/               # Lógica de negocio y procesamiento
+├── templates/              # Vistas HTML (Jinja2)
+├── static/                 # Archivos estáticos (css, js, img)
+├── uploads/                # PDFs subidos y procesados
+├── database/schema.sql     # Esquema de base de datos
+├── requirements.txt        # Dependencias Python
+├── .env.example            # Ejemplo de configuración
+└── ...
 ```
 
-## 🔌 API Endpoints
+## ▶️ Uso
 
-### Documentos
-
-- `GET /api/documents` - Listar documentos con filtros
-- `GET /api/documents/<id>` - Obtener detalle de documento
-- `POST /api/process` - Procesar documentos pendientes
-- `POST /api/validate` - Validar un documento
-- `POST /api/validate-batch` - Validar múltiples documentos
-
-### Estadísticas
-
-- `GET /api/statistics` - Obtener estadísticas del sistema
-- `GET /api/document-types` - Listar tipos de documentos
-
-### Machine Learning
-
-- `POST /api/retrain-model` - Reentrenar el modelo
-
-## 🎨 Tipos de Documentos Soportados
-
-1. **Factura** - Facturas A, B, C
-2. **Nota de Débito** - Notas de débito
-3. **Nota de Crédito** - Notas de crédito
-4. **Remito** - Remitos de entrega
-5. **Desconocido** - Documentos no identificados
-
-## 🔍 Búsqueda de Documentos
-
-### Filtros Disponibles
-
-- Tipo de documento
-- Estado (pendiente, clasificado, validado, error)
-- Rango de fechas
-- CUIT
-- Proveedor
-- Límite de resultados
-
-### Exportación
-
-Los resultados se pueden exportar a CSV desde la interfaz de búsqueda.
-
-## 🧠 Machine Learning
-
-El sistema utiliza:
-
-- **TF-IDF Vectorizer** para extracción de características
-- **Naive Bayes Multinomial** para clasificación
-- **Clasificación basada en reglas** como fallback
-
-### Mejora Continua
-
-El modelo mejora automáticamente:
-1. Los documentos validados se guardan como datos de entrenamiento
-2. Cuando hay suficientes datos nuevos, el sistema puede reentrenarse
-3. El modelo actualizado mejora la precisión de futuras clasificaciones
-
-## 🛠️ Solución de Problemas
-
-### Error: "Tesseract not found"
-
-Verificar que Tesseract esté instalado y la ruta en `.env` sea correcta:
-
-```env
-TESSERACT_PATH=C:/Program Files/Tesseract-OCR/tesseract.exe
-```
-
-### Error: "Connection refused" (MySQL)
-
-Verificar que MySQL esté corriendo:
+1. Inicia el servidor Flask:
 
 ```bash
-# Windows
-net start MySQL80
+python app.py
 ```
 
-### Error: "pdf2image" no funciona
+2. Accede a la app en tu navegador:
 
-Instalar Poppler y agregarlo al PATH del sistema, o especificar la ruta en el código.
+```
+http://localhost:5000
+```
 
-## 📈 Futuras Mejoras
+## 🧑‍💻 Contribuir
 
-- [ ] Soporte para más tipos de archivos (Word, Excel, imágenes)
-- [ ] API REST completa con autenticación
-- [ ] Procesamiento asíncrono con Celery
-- [ ] Dashboard de analíticas avanzadas
-- [ ] Integración con servicios en la nube
-- [ ] Modelos de Deep Learning (BERT, transformers)
-- [ ] Interfaz móvil
+1. Haz un fork del repositorio
+2. Crea una rama: `git checkout -b feature/nueva-funcionalidad`
+3. Realiza tus cambios y haz commit
+4. Haz push a tu rama: `git push origin feature/nueva-funcionalidad`
+5. Abre un Pull Request
 
-## 📝 Licencia
+## 📄 Licencia
 
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
-
-## 👨‍💻 Autor
-
-Desarrollado para el sistema de clasificación de documentos PDF.
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Cree una rama para su característica
-3. Commit sus cambios
-4. Push a la rama
-5. Abra un Pull Request
-
-## 📧 Soporte
-
-Para problemas o preguntas, por favor abra un issue en el repositorio.
+MIT

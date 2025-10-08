@@ -1,4 +1,4 @@
-# Python
+## Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -45,3 +45,31 @@ instance/
 # OS
 .DS_Store
 Thumbs.db
+
+# Testing / Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Pyre type checker
+.pyre/
+
+# Database (específico)
+database/*.db
+database/*.sqlite
+
+# Solo subcarpetas de uploads (no la carpeta principal)
+uploads/pending/
+uploads/classified/
+uploads/temp/
