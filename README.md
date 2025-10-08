@@ -190,3 +190,44 @@ http://localhost:5000
 ## 📄 Licencia
 
 MIT
+
+## 📬 Preguntas Frecuentes (FAQ)
+
+- **¿Dónde se guardan los archivos PDF?**
+  - En la carpeta `uploads/` (subcarpetas según estado: pending, classified, temp).
+- **¿Cómo agrego nuevos tipos de documento?**
+  - Agrega el tipo en la tabla `document_types` de la base de datos y reinicia la app.
+- **¿Qué hago si el OCR no reconoce bien el texto?**
+  - Asegúrate de tener Tesseract bien instalado y los datos de idioma español.
+- **¿Puedo usar otra base de datos?**
+  - El sistema está optimizado para MySQL, pero puedes adaptar los modelos para otros motores compatibles con SQLAlchemy.
+
+## 🛠️ Ejemplos de API
+
+- Obtener lista de documentos:
+  ```bash
+  curl http://localhost:5000/api/documents
+  ```
+- Validar un documento:
+  ```bash
+  curl -X POST -H "Content-Type: application/json" \
+    -d '{"document_id": 1, "document_type": "Factura", "user": "admin"}' \
+    http://localhost:5000/api/validate
+  ```
+- Reentrenar modelo:
+  ```bash
+  curl -X POST http://localhost:5000/api/retrain-model
+  ```
+
+## 🏆 Badges y Contribución
+
+![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)
+![Issues](https://img.shields.io/github/issues/dario-coronel/pdf-classifier)
+
+## 🤝 Soporte y Contacto
+
+¿Tienes dudas, sugerencias o encontraste un bug? Abre un issue en GitHub o contacta a dario.coronel [at] email.com
+
+---
+
+¡Gracias por usar PDF Classifier! Si te resulta útil, dale una estrella ⭐ en GitHub.
