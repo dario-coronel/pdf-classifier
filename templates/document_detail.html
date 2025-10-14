@@ -15,11 +15,11 @@
             </div>
             <div class="card-body">
                 <div style="height: 600px;">
-                    {# Determinar carpeta según estado #}
+                    {# Determinar carpeta según estado y normalizar nombre #}
                     {% if document.status == 'pending' %}
-                        <embed src="/uploads/pending/{{ document.filename }}" type="application/pdf" width="100%" height="100%" />
+                        <embed src="/uploads/pending/{{ document.filename|urlencode }}" type="application/pdf" width="100%" height="100%" />
                     {% elif document.status == 'classified' or document.status == 'validated' %}
-                        <embed src="/uploads/classified/{{ document.document_type.name if document.document_type else 'Desconocido' }}/{{ document.filename }}" type="application/pdf" width="100%" height="100%" />
+                        <embed src="/uploads/classified/{{ document.document_type.name|urlencode }}/{{ document.filename|urlencode }}" type="application/pdf" width="100%" height="100%" />
                     {% else %}
                         <span class="text-danger">No se puede mostrar el PDF para este estado.</span>
                     {% endif %}

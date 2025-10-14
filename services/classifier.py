@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 from typing import Dict, Tuple, Optional
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
@@ -42,8 +42,18 @@ class DocumentClassifier:
             lowercase=True
         )
         
-        # Create classifier
-        self.model = MultinomialNB(alpha=0.1)
+        # Create MLP Neural Network classifier
+        # hidden_layer_sizes=(100, 50) means 2 hidden layers with 100 and 50 neurons
+        self.model = MLPClassifier(
+            hidden_layer_sizes=(100, 50),
+            activation='relu',
+            solver='adam',
+            max_iter=300,
+            random_state=42,
+            early_stopping=True,
+            validation_fraction=0.1,
+            n_iter_no_change=10
+        )
         
         # Initialize with basic training data
         self._train_with_default_data()

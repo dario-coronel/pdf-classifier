@@ -1,5 +1,3 @@
-
-
 from flask import Flask, render_template, jsonify, request, send_file, redirect, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 import os
@@ -230,6 +228,22 @@ def api_retrain_model():
             'error': str(e)
         }), 500
 
+
+# --- Endpoint para servir archivos PDF originales de forma segura ---
+from flask import abort
+
+@app.route('/uploads/<folder>/<path:filename>')
+def serve_uploaded_file(folder, filename):
+    """Sirve archivos PDF solo desde las carpetas permitidas de uploads."""
+    allowed_folders = ['pending', 'classified', 'temp']
+    if folder not in allowed_folders:
+        abort(404)
+    base_dir = os.path.join(app.root_path, 'uploads', folder)
+    # Si es classified, puede haber subcarpetas por tipo
+    file_path = os.path.join(base_dir, filename)
+    if not os.path.isfile(file_path):
+        abort(404)
+    return send_from_directory(base_dir, filename)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
