@@ -12,6 +12,7 @@ services:
       - DATABASE_URL=mysql+pymysql://root:root@db/pdf_classifier
     depends_on:
       - db
+    restart: always
   db:
     image: mysql:8.0
     container_name: pdf-classifier-db
@@ -20,8 +21,13 @@ services:
       MYSQL_DATABASE: pdf_classifier
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 volumes:
   db_data:

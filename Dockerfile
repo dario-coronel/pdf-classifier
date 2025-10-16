@@ -1,5 +1,5 @@
 # Dockerfile para PDF Classifier (Flask + ML)
-FROM python:3.13-slim
+FROM python:3.11-slim
 
 # Instala dependencias del sistema
 RUN apt-get update && \
