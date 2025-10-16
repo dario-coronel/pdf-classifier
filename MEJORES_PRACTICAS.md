@@ -1,5 +1,7 @@
 # 🎯 Mejores Prácticas y Recomendaciones - PDF Classifier
 
+> ⚠️ **IMPORTANTE:** PDF Classifier se ejecuta exclusivamente con Docker Compose. No es necesario instalar dependencias manualmente ni configurar entornos virtuales. Todas las recomendaciones aquí asumen el uso de Docker.
+
 ## 📋 Índice
 1. [Uso Óptimo del Sistema](#uso-óptimo-del-sistema)
 2. [Mejorando la Precisión](#mejorando-la-precisión)
@@ -152,21 +154,14 @@ Realidad: Factura Tipo A
 - Revisar y optimizar configuración
 - Limpiar documentos antiguos si es necesario
 
-### Comandos de Mantenimiento
+### Mantenimiento con Docker
 
-```bash
-# Backup de base de datos
-mysqldump -u root -p pdf_classifier > backup_%date%.sql
+```sh
+# Backup de base de datos (desde el contenedor)
+docker exec pdf-classifier-db-1 mysqldump -u root -proot pdf_classifier > backup_$(date +%F).sql
 
 # Limpiar archivos temporales
-rmdir /s /q uploads\temp
-mkdir uploads\temp
-
-# Ver logs de procesamiento
-python -c "from app import app, db; from models.document import ProcessingLog; 
-with app.app_context(): 
-    logs = ProcessingLog.query.order_by(ProcessingLog.created_at.desc()).limit(10).all()
-    for log in logs: print(f'{log.action}: {log.details}')"
+docker exec pdf-classifier-app-1 rm -rf uploads/temp/*
 ```
 
 ---
@@ -328,121 +323,57 @@ Remoto:
 - CDN para archivos estáticos
 ```
 
+
 ### Implementación con Docker
 
-```dockerfile
-# Dockerfile (ejemplo básico)
-FROM python:3.9
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-CMD ["python", "app.py"]
+El proyecto ya incluye un `Dockerfile` y `docker-compose.yml` listos para usar. Solo debes ejecutar:
+```sh
+docker-compose up --build
 ```
 
 ---
 
 ## 🔍 Solución de Problemas Comunes
 
+
 ### Error: "No se puede conectar a MySQL"
 
-**Diagnóstico:**
-```cmd
-# Verificar si MySQL está corriendo
-sc query MySQL80
+**Diagnóstico y solución:**
+1. Asegúrate de que ambos servicios (app y db) estén corriendo con Docker Compose.
+2. Verifica que el contenedor de base de datos esté levantado: `docker ps`.
+3. Revisa el archivo `.env` y `docker-compose.yml` para que los puertos y credenciales coincidan.
 
-# Verificar puerto
-netstat -an | find "3306"
-
-# Probar conexión
-mysql -u root -p -h localhost
-```
-
-**Solución:**
-```cmd
-# Iniciar servicio
-net start MySQL80
-
-# Verificar .env
-# DB_HOST=localhost
-# DB_PORT=3306
-```
 
 ### Error: "Tesseract not found"
 
-**Diagnóstico:**
-```cmd
-# Verificar instalación
-tesseract --version
-
-# Verificar PATH
-echo %PATH% | find "Tesseract"
-```
-
 **Solución:**
-```cmd
-# Instalar Tesseract
-# Descargar desde: https://github.com/UB-Mannheim/tesseract/wiki
+No es necesario instalar Tesseract manualmente. El contenedor Docker ya incluye Tesseract y Poppler. Si ves este error, asegúrate de estar ejecutando la app solo con Docker Compose.
 
-# Actualizar .env
-TESSERACT_PATH=C:/Program Files/Tesseract-OCR/tesseract.exe
-```
 
 ### Error: "Out of Memory"
 
-**Diagnóstico:**
-```python
-# Ver uso de memoria
-import psutil
-print(f"RAM: {psutil.virtual_memory().percent}%")
-```
-
 **Solución:**
 - Procesar en lotes más pequeños
-- Cerrar aplicaciones innecesarias
-- Aumentar RAM del sistema
+- Aumentar recursos asignados al contenedor Docker
 - Optimizar procesamiento de imágenes
 
-### Error: "Classification accuracy is low"
 
-**Diagnóstico:**
-```python
-# Ver distribución de confianza
-SELECT 
-    CASE 
-        WHEN confidence_score >= 0.8 THEN 'High'
-        WHEN confidence_score >= 0.6 THEN 'Medium'
-        ELSE 'Low'
-    END as confidence_level,
-    COUNT(*) as count
-FROM documents
-WHERE confidence_score IS NOT NULL
-GROUP BY confidence_level;
-```
+### Error: "Classification accuracy is low"
 
 **Solución:**
 1. Validar más documentos (mínimo 50)
 2. Asegurar variedad de tipos
-3. Reentrenar el modelo
+3. Reentrenar el modelo desde el dashboard o la API
 4. Revisar calidad de PDFs
-5. Ajustar MIN_CONFIDENCE en .env
+5. Ajustar MIN_CONFIDENCE en `.env` si es necesario
+
 
 ### Error: "Slow processing"
 
-**Diagnóstico:**
-```python
-# Medir tiempos
-import time
-start = time.time()
-# ... procesar documento ...
-print(f"Tiempo: {time.time() - start:.2f}s")
-```
-
 **Solución:**
 - Optimizar consultas SQL (añadir índices)
-- Usar caché para metadata
 - Limitar páginas procesadas por PDF
-- Procesar en background con Celery
+- Procesar en background con Celery (opcional, requiere modificar el Dockerfile y docker-compose.yml)
 
 ---
 
@@ -485,8 +416,8 @@ ORDER BY fecha DESC;
 
 ## 📚 Recursos Adicionales
 
-### Documentación Oficial
 
+### Documentación Oficial
 - Flask: https://flask.palletsprojects.com/
 - scikit-learn: https://scikit-learn.org/
 - Tesseract: https://github.com/tesseract-ocr/tesseract

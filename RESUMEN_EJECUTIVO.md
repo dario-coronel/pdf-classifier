@@ -2,7 +2,7 @@
 
 ## 🎯 Visión General
 
-**PDF Classifier** es un sistema inteligente de clasificación automática de documentos PDF que utiliza Machine Learning y OCR para identificar, categorizar y organizar documentos empresariales de forma automatizada.
+**PDF Classifier** es un sistema inteligente de clasificación automática de documentos PDF que utiliza Machine Learning y OCR para identificar, categorizar y organizar documentos empresariales de forma automatizada. El sistema se ejecuta exclusivamente con Docker Compose, lo que garantiza portabilidad, facilidad de despliegue y cero conflictos de dependencias.
 
 ---
 
@@ -66,25 +66,11 @@
 
 ### Stack Tecnológico
 
-**Backend:**
-- Python 3.8+ con Flask
-- MySQL para persistencia
-- SQLAlchemy ORM
-
-**Machine Learning:**
-- scikit-learn (TF-IDF + Naive Bayes)
-- Clasificación híbrida (ML + reglas)
-- Entrenamiento incremental
-
-**Procesamiento:**
-- PyPDF2 / pdfplumber (extracción)
-- Tesseract OCR (documentos escaneados)
-- Expresiones regulares para metadata
-
-**Frontend:**
-- Bootstrap 5
-- jQuery + DataTables
-- Chart.js para visualizaciones
+- **Backend:** Python 3.8+ con Flask (en contenedor Docker)
+- **Base de datos:** MySQL (en contenedor Docker)
+- **Machine Learning:** scikit-learn (TF-IDF + Naive Bayes), clasificación híbrida (ML + reglas)
+- **Procesamiento PDF:** PyPDF2, pdfplumber, pdf2image, Tesseract OCR (todo instalado en el contenedor)
+- **Frontend:** Bootstrap 5, jQuery + DataTables, Chart.js
 
 ---
 
@@ -129,23 +115,27 @@
 
 ## 🚀 Proceso de Implementación
 
-### Fase 1: Instalación (1 día)
-1. Instalar dependencias (Python, MySQL, Tesseract)
-2. Configurar base de datos
-3. Inicializar aplicación
-4. Verificar funcionamiento
+
+### Fase 1: Instalación y despliegue (1 día)
+1. Clonar el repositorio desde GitHub
+2. Copiar `.env.example` a `.env` y ajustar si es necesario
+3. Ejecutar `docker-compose up --build`
+4. Acceder a la app en http://localhost:5000
+
 
 ### Fase 2: Entrenamiento Inicial (1 semana)
-1. Cargar 20-30 documentos de muestra
-2. Validar clasificaciones manualmente
-3. Primer reentrenamiento del modelo
-4. Ajuste de configuración
+1. Cargar 20-30 documentos de muestra en `uploads/pending`
+2. Validar clasificaciones manualmente desde el dashboard
+3. Primer reentrenamiento del modelo desde la interfaz o API
+4. Ajuste de configuración si es necesario
+
 
 ### Fase 3: Piloto (2-4 semanas)
 1. Procesar documentos reales
 2. Validar y corregir errores
 3. Reentrenamientos periódicos
 4. Medir mejora de precisión
+
 
 ### Fase 4: Producción (semana 5+)
 1. Procesamiento regular
@@ -230,17 +220,14 @@
 
 ## 📞 Contacto y Soporte
 
+
 ### Documentación
-- **README.md**: Documentación técnica completa
-- **INSTALL.md**: Guía de instalación paso a paso
-- **GUIA_RAPIDA.md**: Referencia rápida de uso
-- **MEJORES_PRACTICAS.md**: Optimización y mantenimiento
+- **README.md**: Documentación técnica completa y actualizada (única fuente oficial)
+
 
 ### Recursos
 - Código fuente completo y documentado
-- Scripts de automatización
-- Ejemplos de uso de API
-- Tests automatizados
+- Ejemplos de uso de API en el README.md
 
 ---
 
@@ -253,8 +240,9 @@
 - 🎯 Enfocar recursos en tareas de mayor valor
 - 🚀 Escalar operaciones sin aumentar personal
 
+
 **Estado**: ✅ Listo para producción  
-**Requisitos**: Mínimos (Python, MySQL, Tesseract)  
+**Requisitos**: Solo Docker y Docker Compose  
 **Tiempo de implementación**: 1-2 días  
 **ROI**: Inmediato  
 
