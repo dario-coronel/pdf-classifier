@@ -18,6 +18,55 @@ Sistema avanzado de clasificación automática de documentos PDF usando Machine 
 - **Reentrenamiento**: El modelo aprende de las validaciones para mejorar continuamente
 - **Base de Datos MySQL**: Almacenamiento robusto y escalable
 
+## 📋 Resumen Ejecutivo
+
+**PDF Classifier** es un sistema inteligente de clasificación automática de documentos PDF que utiliza Machine Learning y OCR para identificar, categorizar y organizar documentos empresariales de forma automatizada.
+
+## ✨ Características Principales
+- Clasificación automática de Facturas, Notas de Crédito, Notas de Débito, Remitos y Documentos Desconocidos
+- OCR integrado (Tesseract) para procesar documentos escaneados
+- Extracción automática de CUIT, proveedor, fecha, número y monto
+- Dashboard web moderno, búsqueda avanzada y visualizaciones
+- Aprendizaje continuo: el sistema mejora con cada validación
+
+## 💼 Beneficios
+- Ahorro de tiempo: hasta 95% menos en clasificación
+- Reducción de errores y costos operativos
+- Organización y trazabilidad total de documentos
+- Escalabilidad: preparado para grandes volúmenes y nuevos tipos
+
+---
+
+# 🎯 Mejores Prácticas y Recomendaciones
+
+## Calidad de los PDFs
+- Usa PDFs generados digitalmente o escaneos de al menos 300 DPI
+- Evita archivos protegidos, rotados o de baja calidad
+- Tamaño recomendado: < 10 MB por documento
+
+## Organización de Archivos
+- Usa nombres descriptivos: `{tipo}_{proveedor}_{numero}_{fecha}.pdf`
+- Ejemplo: `factura_empresa_sa_0001_20231015.pdf`
+- Mantén los archivos en `uploads/pending/` hasta ser procesados
+
+## Flujo de Trabajo Sugerido
+1. Carga PDFs en `uploads/pending/`
+2. Procesa desde el dashboard
+3. Valida y corrige clasificaciones
+4. Reentrena el modelo periódicamente
+
+## Mantenimiento y Performance
+- Reentrena el modelo tras validar 10+ documentos nuevos
+- Realiza backups periódicos de la base de datos y modelos
+- Limpia archivos temporales y documentos antiguos
+
+## Seguridad y Escalabilidad
+- No expongas la app en producción sin HTTPS y autenticación
+- Usa Docker para aislar el entorno y facilitar despliegues
+- El sistema puede crecer fácilmente con más datos y usuarios
+
+---
+
 ## 📋 Requisitos Previos
 
 ### Software Necesario
@@ -101,6 +150,28 @@ mkdir uploads\classified
 mkdir uploads\temp
 mkdir models
 ```
+
+## 🚀 Ejecución (SOLO con Docker Compose)
+
+
+> ⚠️ **IMPORTANTE:** El proyecto debe ejecutarse SIEMPRE usando Docker Compose. No se recomienda ni soporta la ejecución directa en Windows fuera de Docker. Todas las dependencias (incluyendo Poppler y Tesseract) se instalan automáticamente en el contenedor.
+
+1. Copia el archivo `.env.example` a `.env` y revisa que los valores coincidan con los del `docker-compose.yml`:
+   ```sh
+   cp .env.example .env
+   ```
+
+2. Levanta la app y la base de datos con:
+   ```sh
+   docker-compose up --build
+   ```
+
+3. Accede a la aplicación en: [http://localhost:5000](http://localhost:5000)
+
+- La base de datos se inicializa automáticamente con usuario `root` y contraseña `root`.
+- Los datos se guardan en el volumen `db_data` (persistente entre reinicios).
+
+**¡Listo! Tu entorno de desarrollo/pruebas está aislado y listo para usar SOLO con Docker.**
 
 ## 🎯 Uso
 
