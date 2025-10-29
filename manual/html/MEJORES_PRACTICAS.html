@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mejores Practicas</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:900px;margin:28px auto;padding:0 18px;color:#222}
+    header{border-bottom:1px solid #eee;padding-bottom:12px;margin-bottom:20px}
+    pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}
+    code{background:#f6f8fa;padding:2px 4px;border-radius:4px}
+    table{border-collapse:collapse;width:100%}
+    table,th,td{border:1px solid #ddd;padding:8px}
+    a.button{display:inline-block;margin-top:10px;padding:8px 10px;background:#0b5ed7;color:#fff;border-radius:6px;text-decoration:none}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mejores Practicas</h1>
+    <p><a class="button" href="../index.html">Volver al índice</a></p>
+  </header>
+
+  <main>
+  <h1 id="mejores-practicas-y-recomendaciones-pdf-classifier">🎯 Mejores Prácticas y Recomendaciones - PDF Classifier</h1>
+<h2 id="indice">📋 Índice</h2>
+<ol>
+<li><a href="#uso-óptimo-del-sistema">Uso Óptimo del Sistema</a></li>
+<li><a href="#mejorando-la-precisión">Mejorando la Precisión</a></li>
+<li><a href="#mantenimiento">Mantenimiento</a></li>
+<li><a href="#performance">Performance</a></li>
+<li><a href="#seguridad">Seguridad</a></li>
+<li><a href="#escalabilidad">Escalabilidad</a></li>
+<li><a href="#solución-de-problemas-comunes">Solución de Problemas Comunes</a></li>
+</ol>
+<hr />
+<h2 id="uso-optimo-del-sistema">🎯 Uso Óptimo del Sistema</h2>
+<h3 id="calidad-de-los-pdfs">Calidad de los PDFs</h3>
+<p>✅ <strong>RECOMENDADO</strong>:<br />
+- PDFs generados digitalmente (mejor calidad de texto)<br />
+- Resolución mínima: 300 DPI para escaneos<br />
+- PDFs orientados correctamente<br />
+- Tamaño de archivo: &lt; 10 MB por documento<br />
+- Formato: PDF/A para mejor compatibilidad</p>
+<p>❌ <strong>EVITAR</strong>:<br />
+- Escaneos de mala calidad (&lt; 150 DPI)<br />
+- PDFs protegidos con contraseña<br />
+- PDFs con páginas rotadas<br />
+- Archivos muy pesados (&gt; 50 MB)<br />
+- Imágenes en formatos no estándar</p>
+<h3 id="organizacion-de-archivos">Organización de Archivos</h3>
+<pre><code>✅ BIEN:
+uploads/pending/
+  ├── factura_empresa_a_001.pdf
+  ├── factura_empresa_a_002.pdf
+  └── remito_proveedor_b_001.pdf
+
+❌ MAL:
+uploads/pending/
+  ├── documento.pdf
+  ├── copia_de_documento.pdf
+  └── final_definitivo_v3.pdf
+</code></pre>
+<h3 id="nomenclatura-sugerida">Nomenclatura Sugerida</h3>
+<pre><code>{tipo}_{proveedor}_{numero}_{fecha}.pdf
+
+Ejemplos:
+- factura_empresa_sa_0001_20231015.pdf
+- remito_proveedor_xyz_5678_20231016.pdf
+- nota_credito_comercio_abc_0123_20231017.pdf
+</code></pre>
+<hr />
+<h2 id="mejorando-la-precision">🎓 Mejorando la Precisión</h2>
+<h3 id="fase-de-entrenamiento-inicial">Fase de Entrenamiento Inicial</h3>
+<p><strong>Semana 1: Bootstrap</strong><br />
+- Procesar 20-30 documentos variados<br />
+- Validar TODOS manualmente<br />
+- Corregir clasificaciones incorrectas<br />
+- No confiar en clasificaciones automáticas todavía</p>
+<p><strong>Semana 2: Primeros Ajustes</strong><br />
+- Procesar 30-50 documentos más<br />
+- Validar clasificaciones con confianza &lt; 80%<br />
+- Primer reentrenamiento del modelo<br />
+- Empezar a confiar en confianza &gt; 85%</p>
+<p><strong>Mes 1: Consolidación</strong><br />
+- Procesar 100+ documentos<br />
+- Reentrenar cada 50 validaciones<br />
+- Monitorear mejora de precisión<br />
+- Documentar patrones de errores</p>
+<h3 id="validacion-estrategica">Validación Estratégica</h3>
+<p><strong>Prioridades de Validación:</strong></p>
+<ol>
+<li>🔴 <strong>Alta Prioridad</strong> (validar siempre):</li>
+<li>Confianza &lt; 60%</li>
+<li>Tipo "Desconocido"</li>
+<li>Primera vez que se ve un proveedor</li>
+<li>
+<p>Montos significativos</p>
+</li>
+<li>
+<p>🟡 <strong>Media Prioridad</strong> (revisar muestra):</p>
+</li>
+<li>Confianza 60-80%</li>
+<li>Proveedores ocasionales</li>
+<li>
+<p>Tipos de documento menos comunes</p>
+</li>
+<li>
+<p>🟢 <strong>Baja Prioridad</strong> (validación aleatoria):</p>
+</li>
+<li>Confianza &gt; 80%</li>
+<li>Proveedores frecuentes</li>
+<li>Facturas estándar</li>
+</ol>
+<h3 id="casos-de-correccion">Casos de Corrección</h3>
+<p><strong>Cuando corregir:</strong></p>
+<pre><code>Predicción: Factura (70%)
+Correcto: Nota de Crédito
+→ CORREGIR Y VALIDAR
+</code></pre>
+<p><strong>Cuando está bien:</strong></p>
+<pre><code>Predicción: Factura (95%)
+Realidad: Factura Tipo A
+→ VALIDAR COMO ESTÁ
+</code></pre>
+<hr />
+<h2 id="mantenimiento">🔧 Mantenimiento</h2>
+<h3 id="rutinas-diarias">Rutinas Diarias</h3>
+<p><strong>Mañana (10 minutos):</strong><br />
+1. Revisar documentos pendientes<br />
+2. Procesar lote del día anterior<br />
+3. Validar documentos con baja confianza</p>
+<p><strong>Tarde (5 minutos):</strong><br />
+1. Revisar errores de procesamiento<br />
+2. Verificar espacio en disco<br />
+3. Backup de documentos críticos</p>
+<h3 id="rutinas-semanales">Rutinas Semanales</h3>
+<p><strong>Lunes:</strong><br />
+- Reentrenar modelo si hay 50+ validaciones nuevas<br />
+- Revisar estadísticas de precisión<br />
+- Limpiar carpeta temporal</p>
+<p><strong>Viernes:</strong><br />
+- Backup completo de base de datos<br />
+- Exportar estadísticas semanales<br />
+- Revisar logs de errores</p>
+<h3 id="rutinas-mensuales">Rutinas Mensuales</h3>
+<ul>
+<li>Backup completo del sistema</li>
+<li>Análisis de patrones de clasificación</li>
+<li>Actualizar tipos de documentos si es necesario</li>
+<li>Revisar y optimizar configuración</li>
+<li>Limpiar documentos antiguos si es necesario</li>
+</ul>
+<h3 id="comandos-de-mantenimiento">Comandos de Mantenimiento</h3>
+<pre><code class="language-bash"># Backup de base de datos
+mysqldump -u root -p pdf_classifier &gt; backup_%date%.sql
+
+# Limpiar archivos temporales
+rmdir /s /q uploads\temp
+mkdir uploads\temp
+
+# Ver logs de procesamiento
+python -c &quot;from app import app, db; from models.document import ProcessingLog; 
+with app.app_context(): 
+    logs = ProcessingLog.query.order_by(ProcessingLog.created_at.desc()).limit(10).all()
+    for log in logs: print(f'{log.action}: {log.details}')&quot;
+</code></pre>
+<hr />
+<h2 id="performance">⚡ Performance</h2>
+<h3 id="optimizacion-de-procesamiento">Optimización de Procesamiento</h3>
+<p><strong>Lotes Óptimos:</strong><br />
+- 10-20 documentos: Procesamiento interactivo<br />
+- 50-100 documentos: Procesamiento nocturno<br />
+- 100+: Considerar procesamiento paralelo</p>
+<p><strong>Recursos del Sistema:</strong></p>
+<pre><code>Mínimo:
+- 4 GB RAM
+- 2 CPU cores
+- 10 GB disco libre
+
+Recomendado:
+- 8 GB RAM
+- 4 CPU cores
+- 50 GB disco libre (con margen)
+
+Óptimo:
+- 16 GB RAM
+- 8 CPU cores
+- 100 GB SSD
+</code></pre>
+<h3 id="optimizacion-de-base-de-datos">Optimización de Base de Datos</h3>
+<p><strong>Índices Importantes:</strong></p>
+<pre><code class="language-sql">-- Verificar índices
+SHOW INDEX FROM documents;
+
+-- Añadir índice si falta
+CREATE INDEX idx_document_date ON documents(document_date);
+CREATE INDEX idx_status_validated ON documents(status, is_validated);
+</code></pre>
+<p><strong>Limpieza Periódica:</strong></p>
+<pre><code class="language-sql">-- Eliminar logs antiguos (&gt; 6 meses)
+DELETE FROM processing_logs 
+WHERE created_at &lt; DATE_SUB(NOW(), INTERVAL 6 MONTH);
+
+-- Vaciar training data usado
+DELETE FROM ml_training_data 
+WHERE used_for_training = TRUE 
+AND created_at &lt; DATE_SUB(NOW(), INTERVAL 3 MONTH);
+</code></pre>
+<h3 id="cache-y-optimizacion">Caché y Optimización</h3>
+<p><strong>Configuración Recomendada:</strong></p>
+<pre><code class="language-python"># config.py - Agregar
+CACHE_TYPE = &quot;simple&quot;
+CACHE_DEFAULT_TIMEOUT = 300
+
+# Para producción, usar Redis
+# CACHE_TYPE = &quot;redis&quot;
+# CACHE_REDIS_URL = &quot;redis://localhost:6379/0&quot;
+</code></pre>
+<hr />
+<h2 id="seguridad">🔒 Seguridad</h2>
+<h3 id="configuracion-basica">Configuración Básica</h3>
+<p><strong>Variables de Entorno:</strong></p>
+<pre><code class="language-env"># ✅ BIEN - .env
+SECRET_KEY=tu-clave-aleatoria-muy-larga-y-segura-aqui
+DB_PASSWORD=password-fuerte-con-simbolos!123
+
+# ❌ MAL - NO hacer esto
+SECRET_KEY=123
+DB_PASSWORD=admin
+</code></pre>
+<h3 id="proteccion-de-archivos">Protección de Archivos</h3>
+<p><strong>Permisos de Carpetas:</strong></p>
+<pre><code class="language-bash"># Windows - Solo lectura para clasificados
+icacls uploads\classified /grant Users:(R)
+
+# Escritura solo en pending
+icacls uploads\pending /grant Users:(W,R)
+</code></pre>
+<h3 id="backup-seguro">Backup Seguro</h3>
+<p><strong>Estrategia 3-2-1:</strong><br />
+- 3 copias de datos<br />
+- 2 tipos de medios diferentes<br />
+- 1 copia offsite</p>
+<pre><code>Local:
+├── Sistema en producción
+└── Backup diario en disco externo
+
+Remoto:
+└── Backup semanal en la nube
+</code></pre>
+<h3 id="acceso-a-la-aplicacion">Acceso a la Aplicación</h3>
+<p><strong>Para Producción (NO incluido por defecto):</strong></p>
+<pre><code class="language-python"># Agregar autenticación con Flask-Login
+# Agregar HTTPS con certificado SSL
+# Agregar rate limiting
+# Agregar logging de accesos
+</code></pre>
+<hr />
+<h2 id="escalabilidad">📈 Escalabilidad</h2>
+<h3 id="cuando-escalar">Cuando Escalar</h3>
+<p><strong>Señales de que necesitas escalar:</strong><br />
+- ⏱️ Procesamiento &gt; 5 minutos para 10 documentos<br />
+- 💾 Base de datos &gt; 10 GB<br />
+- 📊 &gt; 10,000 documentos/mes<br />
+- 👥 Múltiples usuarios simultáneos<br />
+- 🌍 Necesidad de acceso remoto</p>
+<h3 id="opciones-de-escalamiento">Opciones de Escalamiento</h3>
+<p><strong>Nivel 1: Optimización Local</strong></p>
+<pre><code>- Más RAM
+- SSD más rápido
+- Optimizar consultas SQL
+- Caché con Redis
+</code></pre>
+<p><strong>Nivel 2: Procesamiento Distribuido</strong></p>
+<pre><code>- Celery para tareas asíncronas
+- RabbitMQ o Redis como broker
+- Workers en máquinas separadas
+</code></pre>
+<p><strong>Nivel 3: Arquitectura en la Nube</strong></p>
+<pre><code>- AWS/Azure/GCP
+- Containers (Docker)
+- Kubernetes para orquestación
+- Base de datos administrada
+- CDN para archivos estáticos
+</code></pre>
+<h3 id="implementacion-con-docker">Implementación con Docker</h3>
+<pre><code class="language-dockerfile"># Dockerfile (ejemplo básico)
+FROM python:3.9
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD [&quot;python&quot;, &quot;app.py&quot;]
+</code></pre>
+<hr />
+<h2 id="solucion-de-problemas-comunes">🔍 Solución de Problemas Comunes</h2>
+<h3 id="error-no-se-puede-conectar-a-mysql">Error: "No se puede conectar a MySQL"</h3>
+<p><strong>Diagnóstico:</strong></p>
+<pre><code class="language-cmd"># Verificar si MySQL está corriendo
+sc query MySQL80
+
+# Verificar puerto
+netstat -an | find &quot;3306&quot;
+
+# Probar conexión
+mysql -u root -p -h localhost
+</code></pre>
+<p><strong>Solución:</strong></p>
+<pre><code class="language-cmd"># Iniciar servicio
+net start MySQL80
+
+# Verificar .env
+# DB_HOST=localhost
+# DB_PORT=3306
+</code></pre>
+<h3 id="error-tesseract-not-found">Error: "Tesseract not found"</h3>
+<p><strong>Diagnóstico:</strong></p>
+<pre><code class="language-cmd"># Verificar instalación
+tesseract --version
+
+# Verificar PATH
+echo %PATH% | find &quot;Tesseract&quot;
+</code></pre>
+<p><strong>Solución:</strong></p>
+<pre><code class="language-cmd"># Instalar Tesseract
+# Descargar desde: https://github.com/UB-Mannheim/tesseract/wiki
+
+# Actualizar .env
+TESSERACT_PATH=C:/Program Files/Tesseract-OCR/tesseract.exe
+</code></pre>
+<h3 id="error-out-of-memory">Error: "Out of Memory"</h3>
+<p><strong>Diagnóstico:</strong></p>
+<pre><code class="language-python"># Ver uso de memoria
+import psutil
+print(f&quot;RAM: {psutil.virtual_memory().percent}%&quot;)
+</code></pre>
+<p><strong>Solución:</strong><br />
+```</p>
+  </main>
+
+  <footer style="margin-top:28px;color:#666">Generado automáticamente desde Markdown</footer>
+</body>
+</html>
