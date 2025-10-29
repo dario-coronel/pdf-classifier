@@ -1,3 +1,4 @@
+````markdown
 # ✅ Resumen de Instalación Completada
 
 ## 🎉 ¡Lo que ya está instalado!
@@ -142,3 +143,5 @@ Ya está configurado correctamente ✅
 ---
 
 **Una vez configures la contraseña de MySQL, ¡el sistema estará 100% listo para usar!** 🎉
+
+````

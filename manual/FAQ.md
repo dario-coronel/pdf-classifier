@@ -1,3 +1,4 @@
+````markdown
 # ❓ Preguntas Frecuentes (FAQ) - PDF Classifier
 
 ## 📑 Índice
@@ -359,9 +360,9 @@ python -c "from app import app, db; from services.document_service import Docume
 with app.app_context(): 
     service = DocumentService()
     stats = service.get_statistics()
-    print(f'Total: {stats[\"total\"]}')
-    print(f'Pendientes: {stats[\"pending\"]}')
-    print(f'Validados: {stats[\"validated\"]}')"
+    print(f'Total: {stats["total"]}')
+    print(f'Pendientes: {stats["pending"]}')
+    print(f'Validados: {stats["validated"]}')"
 ```
 
 ---
@@ -394,3 +395,5 @@ with app.app_context():
 
 **Última actualización**: Octubre 2025  
 **Versión**: 1.0.0
+
+````

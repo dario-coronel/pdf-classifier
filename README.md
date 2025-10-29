@@ -9,6 +9,22 @@ Sistema avanzado de clasificación automática de documentos PDF usando Machine 
 
 ## 🚀 Características
 
+## 📚 Documentación consolidada
+
+La documentación de usuario (Guía Rápida, Instalación, FAQ, Mejores Prácticas y otros) se ha consolidado dentro de la carpeta `manual/` en la raíz del proyecto. Para una experiencia de lectura ordenada, abrir:
+
+- `manual/GUIA_RAPIDA.md`
+- `manual/INSTALL.md`
+- `manual/FAQ.md`
+- `manual/MEJORES_PRACTICAS.md`
+- `manual/INSTALACION_TESSERACT_POPPLER.md`
+- `manual/ESTRUCTURA.md`
+- `manual/ESTADO_INSTALACION.md`
+- `manual/RESUMEN_EJECUTIVO.md`
+
+Mantuvimos `README.md` como índice principal y entrada rápida; toda la documentación extensa está ahora en `manual/`.
+
+
 - **Clasificación Automática**: Utiliza Machine Learning para clasificar documentos en categorías predefinidas
 - **OCR Integrado**: Extrae texto de documentos escaneados usando Tesseract
 - **Extracción de Datos**: Identifica automáticamente CUIT, proveedor, fecha, número de documento y montos

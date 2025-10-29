@@ -1,3 +1,4 @@
+````markdown
 # Guía Rápida - PDF Classifier
 
 ## 📚 ¿Qué hace este sistema?
@@ -234,3 +235,5 @@ Si encuentras problemas:
 
 **Versión**: 1.0.0  
 **Última actualización**: Octubre 2025
+
+````

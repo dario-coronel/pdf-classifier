@@ -1,3 +1,4 @@
+````markdown
 # Guía de Instalación - Tesseract OCR y Poppler
 
 ## 🔍 Tesseract OCR
@@ -128,43 +129,43 @@ Copyright 2005-2023 The Poppler Developers - http://poppler.freedesktop.org
 Una vez instalados Tesseract y Poppler, configura el archivo .env:
 
 1. **Copiar archivo de ejemplo**:
-   ```cmd
-   cd c:\Clases\PP3\pdf-classifier
-   copy .env.example .env
-   ```
+```cmd
+cd c:\Clases\PP3\pdf-classifier
+copy .env.example .env
+```
 
 2. **Editar .env** (usar Notepad o tu editor favorito):
-   ```cmd
-   notepad .env
-   ```
+```cmd
+notepad .env
+```
 
 3. **Configurar las rutas**:
-   ```env
-   # Flask Configuration
-   FLASK_APP=app.py
-   FLASK_ENV=development
-   SECRET_KEY=tu-clave-secreta-cambiar-en-produccion-123456789
+```env
+# Flask Configuration
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=tu-clave-secreta-cambiar-en-produccion-123456789
 
-   # Database Configuration
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=TU_PASSWORD_MYSQL_AQUI
-   DB_NAME=pdf_classifier
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=TU_PASSWORD_MYSQL_AQUI
+DB_NAME=pdf_classifier
 
-   # Folders Configuration
-   UPLOAD_FOLDER=uploads/pending
-   CLASSIFIED_FOLDER=uploads/classified
-   TEMP_FOLDER=uploads/temp
+# Folders Configuration
+UPLOAD_FOLDER=uploads/pending
+CLASSIFIED_FOLDER=uploads/classified
+TEMP_FOLDER=uploads/temp
 
-   # OCR Configuration - IMPORTANTE: Ajustar esta ruta
-   TESSERACT_PATH=C:/Program Files/Tesseract-OCR/tesseract.exe
+# OCR Configuration - IMPORTANTE: Ajustar esta ruta
+TESSERACT_PATH=C:/Program Files/Tesseract-OCR/tesseract.exe
 
-   # ML Model Configuration
-   MODEL_PATH=models/classifier_model.pkl
-   VECTORIZER_PATH=models/vectorizer.pkl
-   MIN_CONFIDENCE=0.6
-   ```
+# ML Model Configuration
+MODEL_PATH=models/classifier_model.pkl
+VECTORIZER_PATH=models/vectorizer.pkl
+MIN_CONFIDENCE=0.6
+```
 
 4. **Guardar y cerrar** el archivo .env
 
@@ -267,3 +268,5 @@ Si tienes problemas:
 ---
 
 **Una vez completados estos pasos, estarás listo para ejecutar `start.bat` y comenzar a usar el sistema.**
+
+````

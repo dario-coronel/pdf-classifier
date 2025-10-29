@@ -1,3 +1,4 @@
+```markdown
 # 📋 Resumen Ejecutivo - PDF Classifier
 
 ## 🎯 Visión General
@@ -264,3 +265,5 @@
 
 **Versión**: 1.0.0  
 **Fecha**: Octubre 2025
+
+```

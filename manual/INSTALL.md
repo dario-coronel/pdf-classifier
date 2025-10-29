@@ -1,3 +1,4 @@
+````markdown
 # PDF Classifier - Installation Guide
 
 ## Windows Installation Steps
@@ -175,3 +176,5 @@ For issues:
 - Keep classified folders organized
 - Regular database backups
 - Monitor disk space in uploads folder
+
+````
