@@ -126,6 +126,17 @@ mkdir uploads\temp
 mkdir models
 ```
 
+## 📚 Regenerar documentación estática (HTML)
+
+Si actualizás los archivos Markdown en `manual/` y querés generar HTML estático en `manual/html/`, ejecutá:
+
+```cmd
+tools\gen_docs.bat
+```
+
+El script activará el `venv` (si existe) y ejecutará `tools/md_to_html.py`.
+
+
 ## 🎯 Uso
 
 ### 1. Iniciar la Aplicación
