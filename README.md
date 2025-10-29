@@ -18,6 +18,14 @@ Sistema avanzado de clasificación automática de documentos PDF usando Machine 
 - **Reentrenamiento**: El modelo aprende de las validaciones para mejorar continuamente
 - **Base de Datos MySQL**: Almacenamiento robusto y escalable
 
+## 🆕 Novedades recientes (Oct 2025)
+
+- Leyendas del dashboard mejoradas: los porcentajes en las leyendas ahora se muestran con 1 decimal y no se cortan visualmente.
+- Colores consistentes en los gráficos: cada tipo de documento tiene un color fijo en todos los gráficos (facilita identificación visual).
+- Botón "Abrir Carpeta" en la vista de `Configuración`: ahora podés abrir desde la UI la carpeta `uploads/pending`, la carpeta `uploads/classified` o una subcarpeta por tipo. Nota: esta acción solo funciona cuando la aplicación corre en modo desarrollo/debug y en la misma máquina donde corre el servidor.
+
+Estas mejoras son orientadas a facilitar la revisión visual de estadísticas y la apertura rápida de carpetas cuando trabajás localmente.
+
 ## 📋 Requisitos Previos
 
 ### Software Necesario
@@ -178,6 +186,28 @@ python app.py
 ```
 http://localhost:5000
 ```
+
+### Abrir carpetas desde la UI
+
+En la vista `Configuración` ahora hay botones para abrir carpetas directamente desde la interfaz:
+
+- **Abrir Carpeta de Carga** -> abre `uploads/pending`.
+- **Abrir Carpeta de Clasificados** -> abre `uploads/classified`.
+- **Abrir subcarpeta por tipo** -> seleccioná un tipo y se abrirá `uploads/classified/<Tipo>`.
+
+Importante: Esto solo funciona si la aplicación se está ejecutando en la misma máquina (localhost) y en modo debug (desarrollo). Si accedés a la app desde otra máquina o en producción, la acción fallará de forma segura y la UI mostrará la ruta que debés abrir manualmente.
+
+### Notas para desarrolladores
+
+- La ruta del backend para esta acción es `POST /api/open-folder` y está protegida para que funcione únicamente en `app.debug == True`.
+- El servidor valida `subfolder` contra la lista de tipos definida en `Config.DOCUMENT_TYPES` para evitar abrir rutas arbitrarias.
+- En Windows se usa `os.startfile(path)`, en macOS `open` y en Linux `xdg-open`.
+
+### Troubleshooting rápido
+
+- Si al hacer clic no pasa nada: verificá la consola del navegador (F12 → Console) para errores JS y la salida del servidor para tracebacks.
+- Si el servidor corre en una VM o contenedor remoto, la función de abrir carpeta no podrá abrir el Explorador en tu máquina local — usar el fallback que indica la ruta en disco.
+- Si la carpeta no existe, revisá que las rutas en `config.py` sean correctas y que las carpetas se hayan creado (la app crea las carpetas al iniciarse si están ausentes).
 
 ## 🧑‍💻 Contribuir
 

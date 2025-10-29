@@ -197,7 +197,7 @@
                     <td><small>${doc.cuit || '-'}</small></td>
                     <td><small>${doc.total_amount ? '$' + parseFloat(doc.total_amount).toFixed(2) : '-'}</small></td>
                     <td>
-                        <a href="/documents/view/${doc.id}" class="btn btn-sm btn-primary" target="_blank">
+                        <a href="/documents/view/${doc.id}" class="btn btn-sm btn-primary">
                             <i class="fas fa-eye"></i>
                         </a>
                     </td>
@@ -246,7 +246,7 @@
     
     function exportResults() {
         if (searchResults.length === 0) {
-            alert('No hay resultados para exportar');
+            showToast('No hay resultados para exportar', 'warning');
             return;
         }
         

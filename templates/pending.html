@@ -107,8 +107,8 @@
                                     <button class="btn btn-sm btn-success" onclick="validateSingle({{ doc.id }})">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                    <a href="{{ url_for('view_document', doc_id=doc.id) }}" 
-                                       class="btn btn-sm btn-info" target="_blank">
+                                                <a href="{{ url_for('view_document', doc_id=doc.id) }}" 
+                                                    class="btn btn-sm btn-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                 </td>
@@ -151,33 +151,29 @@
         const select = document.querySelector(`.doc-type-select[data-doc-id="${docId}"]`);
         const docType = select.value;
         
-        if (!confirm(`¿Validar como "${docType}"?`)) return;
-        
-        showLoading();
-        fetch('/api/validate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                document_id: docId,
-                document_type: docType,
-                user: 'admin'
+        showConfirm(`¿Validar como "${docType}"?`, 'Validar documento').then(confirmed => {
+            if (!confirmed) return;
+
+            showLoading();
+            fetch('/api/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ document_id: docId, document_type: docType, user: 'admin' })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            if (data.success) {
-                showToast('Documento validado correctamente', 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast('Error al validar documento: ' + data.error, 'danger');
-            }
-        })
-        .catch(error => {
-            hideLoading();
-            showToast('Error: ' + error, 'danger');
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                if (data.success) {
+                    showToast('Documento validado correctamente', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Error al validar documento: ' + data.error, 'danger');
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                showToast('Error: ' + error, 'danger');
+            });
         });
     }
     
@@ -185,13 +181,14 @@
         const checkboxes = document.querySelectorAll('.doc-checkbox:checked');
         
         if (checkboxes.length === 0) {
-            alert('Por favor seleccione al menos un documento');
+            showToast('Por favor seleccione al menos un documento', 'warning');
             return;
         }
-        
-        if (!confirm(`¿Validar ${checkboxes.length} documentos?`)) return;
-        
-        const validations = [];
+
+        showConfirm(`¿Validar ${checkboxes.length} documentos?`, 'Validar documentos').then(confirmed => {
+            if (!confirmed) return;
+
+            const validations = [];
         checkboxes.forEach(cb => {
             const docId = cb.value;
             const select = document.querySelector(`.doc-type-select[data-doc-id="${docId}"]`);
@@ -223,6 +220,7 @@
         .catch(error => {
             hideLoading();
             showToast('Error: ' + error, 'danger');
+        });
         });
     }
 </script>

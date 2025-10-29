@@ -62,9 +62,27 @@
                     <small>Los documentos validados se mueven aquí, organizados por tipo</small>
                 </div>
                 <hr>
-                <button class="btn btn-primary" onclick="openFolder('pending')">
-                    <i class="fas fa-folder-open"></i> Abrir Carpeta de Carga
-                </button>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button class="btn btn-primary" onclick="openFolder('pending')">
+                        <i class="fas fa-folder-open"></i> Abrir Carpeta de Carga
+                    </button>
+
+                    <button class="btn btn-secondary" onclick="openFolder('classified')">
+                        <i class="fas fa-folder-open"></i> Abrir Carpeta de Clasificados
+                    </button>
+
+                    <div class="input-group" style="max-width:340px;">
+                        <select id="classifiedTypeSelect" class="form-select">
+                            <option value="">-- Abrir subcarpeta por tipo --</option>
+                            {% for dt in document_types %}
+                            <option value="{{ dt.name }}">{{ dt.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-outline-primary" type="button" onclick="openFolder('classified', document.getElementById('classifiedTypeSelect').value)">
+                            Abrir
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -122,8 +140,30 @@
 
 {% block extra_js %}
 <script>
-    function openFolder(folder) {
-        alert('Abra la carpeta manualmente en: uploads/' + folder);
+    function openFolder(folder, subfolder) {
+        // Try to open folder via server API (only works when server runs locally in debug mode)
+        const payload = { folder: folder };
+        if (subfolder) payload.subfolder = subfolder;
+        fetch('/api/open-folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function(resp) {
+            return resp.json().then(function(j) { return { ok: resp.ok, json: j }; });
+        }).then(function(r) {
+            if (r.ok && r.json && r.json.success) {
+                showToast(r.json.message || 'Abriendo carpeta...', 'success');
+            } else {
+                // Show instruction fallback + server error message if any
+                const msg = (r.json && r.json.error) ? r.json.error + '\n\n' : '';
+                const manual = subfolder ? `uploads/${folder}/${subfolder}` : `uploads/${folder}`;
+                showToast(msg + 'Abra la carpeta manualmente en: ' + manual, 'info');
+            }
+        }).catch(function(err) {
+            console.error('openFolder error', err);
+            const manual = subfolder ? `uploads/${folder}/${subfolder}` : `uploads/${folder}`;
+            showToast('Abra la carpeta manualmente en: ' + manual, 'info');
+        });
     }
 </script>
 {% endblock %}

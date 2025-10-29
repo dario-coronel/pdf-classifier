@@ -45,10 +45,21 @@ class DocumentService:
             if existing:
                 print(f"Document {original_filename} already exists")
                 return existing.id
-            
+
+            # Normalize filename
+            safe_filename = secure_filename(original_filename)
+            pending_folder = Config.UPLOAD_FOLDER
+            safe_file_path = os.path.join(pending_folder, safe_filename)
+
+            # If the file_path is not the same as the safe_file_path, rename/move it
+            if os.path.abspath(file_path) != os.path.abspath(safe_file_path):
+                if not os.path.exists(safe_file_path):
+                    os.rename(file_path, safe_file_path)
+                file_path = safe_file_path
+
             # Create document record
             doc = Document(
-                filename=secure_filename(original_filename),
+                filename=safe_filename,
                 original_filename=original_filename,
                 file_path=file_path,
                 file_size=os.path.getsize(file_path),
@@ -227,21 +238,52 @@ class DocumentService:
         classified_docs = Document.query.filter_by(status='classified').count()
         validated_docs = Document.query.filter_by(is_validated=True).count()
         error_docs = Document.query.filter_by(status='error').count()
-        
-        # Statistics by type
-        type_stats = db.session.query(
-            DocumentType.name,
-            db.func.count(Document.id)
-        ).join(Document, Document.document_type_id == DocumentType.id)\
-         .group_by(DocumentType.name).all()
-        
+
+
+        # Statistics by type (all docs)
+        type_stats = (
+            db.session.query(
+                DocumentType.name,
+                db.func.count(Document.id)
+            )
+            .join(Document, Document.document_type_id == DocumentType.id)
+            .group_by(DocumentType.name)
+            .all()
+        )
+
+        # Statistics by type (only validated)
+        validated_type_stats = (
+            db.session.query(
+                DocumentType.name,
+                db.func.count(Document.id)
+            )
+            .join(Document, Document.document_type_id == DocumentType.id)
+            .filter(Document.is_validated == True)
+            .group_by(DocumentType.name)
+            .all()
+        )
+
+        # Statistics by type (not validated)
+        not_validated_type_stats = (
+            db.session.query(
+                DocumentType.name,
+                db.func.count(Document.id)
+            )
+            .join(Document, Document.document_type_id == DocumentType.id)
+            .filter((Document.is_validated == False) | (Document.is_validated == None))
+            .group_by(DocumentType.name)
+            .all()
+        )
+
         return {
             'total': total_docs,
             'pending': pending_docs,
             'classified': classified_docs,
             'validated': validated_docs,
             'errors': error_docs,
-            'by_type': dict(type_stats)
+            'by_type': dict(type_stats),
+            'validated_by_type': dict(validated_type_stats),
+            'not_validated_by_type': dict(not_validated_type_stats)
         }
     
     def retrain_model(self) -> bool:

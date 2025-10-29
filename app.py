@@ -1,11 +1,14 @@
 from flask import Flask, render_template, jsonify, request, send_file, redirect, url_for, flash, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 import os
+import unicodedata
 from datetime import datetime
 from config import Config
 from models import db
 from models.document import Document, DocumentType
 from services.document_service import DocumentService
+import subprocess
+import sys
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -228,22 +231,121 @@ def api_retrain_model():
             'error': str(e)
         }), 500
 
+@app.route('/api/open-folder', methods=['POST'])
+def api_open_folder():
+    """Open a server-side folder in the OS file explorer (development only)."""
+    if not app.debug:
+        return jsonify({'success': False, 'error': 'Operation disabled in production'}), 403
+
+    data = request.get_json(silent=True) or {}
+    folder_key = data.get('folder')
+    subfolder = data.get('subfolder')
+    if not folder_key:
+        return jsonify({'success': False, 'error': 'Missing folder parameter'}), 400
+
+    # Only allow specific named folders to avoid arbitrary path execution
+    if folder_key == 'pending':
+        path = app.config.get('UPLOAD_FOLDER')
+    elif folder_key == 'classified':
+        path = app.config.get('CLASSIFIED_FOLDER')
+        # If requesting a specific classified subfolder, validate against known types
+        if subfolder:
+            # Use Config.DOCUMENT_TYPES as whitelist to avoid arbitrary paths
+            if subfolder not in Config.DOCUMENT_TYPES:
+                return jsonify({'success': False, 'error': 'Invalid subfolder type'}), 400
+            path = os.path.join(path, subfolder)
+    else:
+        return jsonify({'success': False, 'error': 'Invalid folder'}), 400
+
+    if not path or not os.path.exists(path):
+        return jsonify({'success': False, 'error': f'Path does not exist: {path}'}), 400
+
+    try:
+        if os.name == 'nt':
+            # Windows
+            os.startfile(path)
+        elif sys.platform == 'darwin':
+            subprocess.Popen(['open', path])
+        else:
+            subprocess.Popen(['xdg-open', path])
+        return jsonify({'success': True, 'message': f'Abriendo carpeta: {path}'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # --- Endpoint para servir archivos PDF originales de forma segura ---
 from flask import abort
 
+def normalize_filename(name):
+    """Normalize filename: keep only letters, numbers, spaces and dot; lowercase; remove accents"""
+    if not name:
+        return ''
+    import re
+    # Replace underscores and hyphens with spaces
+    name = name.replace('_', ' ').replace('-', ' ')
+    # Remove accents
+    name = ''.join(
+        c for c in unicodedata.normalize('NFD', name)
+        if unicodedata.category(c) != 'Mn'
+    )
+    # Lowercase
+    name = name.lower()
+    # Remove all non-alphanumeric characters except space and dot
+    name = re.sub(r'[^a-z0-9. ]', '', name)
+    # Remove multiple spaces
+    name = ' '.join(name.split())
+    return name
+
 @app.route('/uploads/<folder>/<path:filename>')
 def serve_uploaded_file(folder, filename):
-    """Sirve archivos PDF solo desde las carpetas permitidas de uploads."""
-    allowed_folders = ['pending', 'classified', 'temp']
-    if folder not in allowed_folders:
-        abort(404)
-    base_dir = os.path.join(app.root_path, 'uploads', folder)
-    # Si es classified, puede haber subcarpetas por tipo
-    file_path = os.path.join(base_dir, filename)
-    if not os.path.isfile(file_path):
-        abort(404)
-    return send_from_directory(base_dir, filename)
+    """Serve uploaded PDF files with flexible filename matching"""
+    # 1. Buscar en carpeta original (pending o classified)
+    search_dirs = []
+    uploads_root = os.path.join(app.root_path, 'uploads')
+    if folder == 'pending':
+        search_dirs.append(os.path.join(uploads_root, 'pending'))
+    elif folder == 'classified':
+        # Buscar en todas las subcarpetas de classified
+        classified_dir = os.path.join(uploads_root, 'classified')
+        # Si la URL incluye subcarpeta (tipo), buscar ahí primero
+        tipo = os.path.dirname(filename)
+        file_only = os.path.basename(filename)
+        if tipo:
+            search_dirs.append(os.path.join(classified_dir, tipo))
+        # Luego buscar en todas las subcarpetas de classified
+        for subfolder in os.listdir(classified_dir):
+            subdir_path = os.path.join(classified_dir, subfolder)
+            if os.path.isdir(subdir_path) and subdir_path not in search_dirs:
+                search_dirs.append(subdir_path)
+        filename = file_only
+    else:
+        # Carpeta desconocida, buscar solo ahí
+        search_dirs.append(os.path.join(uploads_root, folder))
+
+    # 2. Buscar en cada carpeta
+    for uploads_dir in search_dirs:
+        if not os.path.isdir(uploads_dir):
+            continue
+        print(f"DEBUG: Buscando archivo: {filename}")
+        print(f"DEBUG: En directorio: {uploads_dir}")
+        files_in_dir = os.listdir(uploads_dir)
+        # Exact match
+        for f in files_in_dir:
+            if f.lower() == filename.lower():
+                print(f"DEBUG: Archivo encontrado (match exacto): {f}")
+                return send_from_directory(uploads_dir, f)
+        # Normalized match
+        norm_requested = normalize_filename(filename)
+        print(f"DEBUG: Buscando versión normalizada: {norm_requested}")
+        for f in files_in_dir:
+            norm_f = normalize_filename(f)
+            print(f"DEBUG: Comparando '{norm_requested}' con '{norm_f}' (archivo: {f})")
+            if norm_f == norm_requested:
+                print(f"DEBUG: Archivo encontrado (match normalizado): {f}")
+                return send_from_directory(uploads_dir, f)
+        print(f"DEBUG: Archivo NO encontrado en {uploads_dir}")
+    print(f"DEBUG: Archivo NO encontrado en ninguna carpeta: {search_dirs}")
+    abort(404)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

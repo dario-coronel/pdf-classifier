@@ -4,6 +4,31 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
+<style>
+    /* Compact dashboard styles to fit more content on one screen */
+    .compact-card .card-body { padding: 0.75rem; overflow: visible; }
+    .compact-card .card-header { padding: 0.5rem 0.75rem; }
+    .compact-card .card-header h6 { font-size: 0.9rem; }
+    .compact-card canvas { max-width: 100%; display: block; }
+    /* Prevent legend/labels from being visually clipped by card rounding */
+    .compact-card .card-body canvas { overflow: visible; }
+    /* Ensure legend text does not wrap and has room for percentage */
+    .compact-card .card-body { white-space: normal; }
+    /* Responsive canvas heights to make charts fit better */
+    @media (min-width: 1200px) {
+        .compact-card canvas { height: 140px !important; }
+    }
+    @media (min-width: 768px) and (max-width: 1199px) {
+        .compact-card canvas { height: 150px !important; }
+    }
+    @media (max-width: 767px) {
+        .compact-card canvas { height: 180px !important; }
+    }
+    .stats-row .stat-card { padding: 0.75rem; }
+    .table-responsive { max-height: 220px; overflow-y: auto; }
+    /* Reduce top spacing for charts */
+    .mb-4 { margin-bottom: 0.8rem !important; }
+</style>
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
@@ -20,46 +45,6 @@
                     </div>
                     <div class="col-auto">
                         <i class="fas fa-file-pdf stat-icon text-primary"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card warning border-0 h-100">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Pendientes
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stats.pending }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-hourglass-half stat-icon text-warning"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card stat-card success border-0 h-100">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Validados
-                        </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">
-                            {{ stats.validated }}
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-check-circle stat-icon text-success"></i>
                     </div>
                 </div>
             </div>
@@ -89,28 +74,55 @@
 
 <!-- Charts Row -->
 <div class="row mb-4">
-    <div class="col-xl-8 col-lg-7">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
+    <div class="col-12">
+        <div class="card shadow mb-4 compact-card">
+            <div class="card-header py-2">
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-chart-bar"></i> Documentos por Tipo
                 </h6>
             </div>
-            <div class="card-body">
-                <canvas id="typeChart" height="100"></canvas>
+            <div class="card-body" style="height:160px;">
+                <canvas id="typeChart" height="120"></canvas>
             </div>
         </div>
     </div>
-    
-    <div class="col-xl-4 col-lg-5">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-chart-pie"></i> Distribución
+</div>
+
+<!-- Pie charts side-by-side -->
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-12 mb-3">
+        <div class="card shadow compact-card h-100">
+            <div class="card-header py-2">
+                <h6 class="m-0 font-weight-bold text-primary small">
+                    <i class="fas fa-chart-pie"></i> Distribución (Todos)
                 </h6>
             </div>
-            <div class="card-body">
+            <div class="card-body d-flex align-items-center justify-content-center" style="height:160px;">
                 <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 mb-3">
+        <div class="card shadow compact-card h-100">
+            <div class="card-header py-2">
+                <h6 class="m-0 font-weight-bold text-success small">
+                    <i class="fas fa-chart-pie"></i> Validados
+                </h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="height:160px;">
+                <canvas id="pieChartValidated"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-12 mb-3">
+        <div class="card shadow compact-card h-100">
+            <div class="card-header py-2">
+                <h6 class="m-0 font-weight-bold text-warning small">
+                    <i class="fas fa-chart-pie"></i> No Validados
+                </h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="height:160px;">
+                <canvas id="pieChartNotValidated"></canvas>
             </div>
         </div>
     </div>
@@ -173,7 +185,7 @@
                                                 {% elif doc.confidence_score > 0.5 %}bg-warning
                                                 {% else %}bg-danger{% endif %}"
                                                 role="progressbar"
-                                                style="width: {{ (doc.confidence_score * 100)|round }}%">
+                                                data-width="{{ (doc.confidence_score * 100)|round }}">
                                                 {{ (doc.confidence_score * 100)|round }}%
                                             </div>
                                         </div>
@@ -200,6 +212,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Embed stats as JSON to avoid direct Jinja injections inside JS and satisfy linters -->
+<script type="application/json" id="stats-json">{{ stats|tojson }}</script>
 <script>
     // Initialize DataTable
     $(document).ready(function() {
@@ -211,31 +225,43 @@
         });
     });
     
+    // Read stats from the embedded JSON node to avoid inline Jinja in JS
+    const stats = JSON.parse(document.getElementById('stats-json').textContent || '{}');
+
     // Type distribution chart
     const typeCtx = document.getElementById('typeChart').getContext('2d');
-    const typeData = {{ stats.by_type|tojson }};
-    
-    new Chart(typeCtx, {
+    const typeData = stats.by_type || {};
+
+    // Master labels (order) comes from the overall distribution so color assignment is stable
+    const masterLabels = Object.keys(typeData);
+
+    // Fixed palette: assign these colors in order to masterLabels. Add more if you have more types.
+    const palette = [
+        'rgba(78, 115, 223, 0.9)',  // blue
+        'rgba(28, 200, 138, 0.9)',  // green
+        'rgba(246, 194, 62, 0.95)', // yellow
+        'rgba(231, 74, 59, 0.9)',   // red
+        'rgba(54, 185, 204, 0.9)',  // teal
+        'rgba(153, 102, 255, 0.9)', // purple
+        'rgba(255, 159, 64, 0.9)'   // orange
+    ];
+
+    // Map type name => color (deterministic by index in masterLabels)
+    const colorMap = {};
+    masterLabels.forEach((lbl, i) => { colorMap[lbl] = palette[i % palette.length]; });
+
+    // Helper to build a color array for a list of labels
+    const colorsFor = (labels) => labels.map(l => colorMap[l] || 'rgba(128,128,128,0.8)');
+
+    const typeChart = new Chart(typeCtx, {
         type: 'bar',
         data: {
-            labels: Object.keys(typeData),
+            labels: masterLabels,
             datasets: [{
                 label: 'Cantidad de Documentos',
-                data: Object.values(typeData),
-                backgroundColor: [
-                    'rgba(78, 115, 223, 0.8)',
-                    'rgba(28, 200, 138, 0.8)',
-                    'rgba(246, 194, 62, 0.8)',
-                    'rgba(231, 74, 59, 0.8)',
-                    'rgba(54, 185, 204, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(78, 115, 223, 1)',
-                    'rgba(28, 200, 138, 1)',
-                    'rgba(246, 194, 62, 1)',
-                    'rgba(231, 74, 59, 1)',
-                    'rgba(54, 185, 204, 1)'
-                ],
+                data: masterLabels.map(l => Number(typeData[l] || 0)),
+                backgroundColor: colorsFor(masterLabels),
+                borderColor: masterLabels.map(l => (colorMap[l] || 'rgba(128,128,128,0.9)').replace('0.9)', '1)')),
                 borderWidth: 1
             }]
         },
@@ -258,34 +284,159 @@
         }
     });
     
-    // Pie chart
+    // Pie chart - Todos (with percentage labels)
     const pieCtx = document.getElementById('pieChart').getContext('2d');
-    new Chart(pieCtx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(typeData),
-            datasets: [{
-                data: Object.values(typeData),
-                backgroundColor: [
-                    'rgba(78, 115, 223, 0.8)',
-                    'rgba(28, 200, 138, 0.8)',
-                    'rgba(246, 194, 62, 0.8)',
-                    'rgba(231, 74, 59, 0.8)',
-                    'rgba(54, 185, 204, 0.8)'
-                ],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+
+    // Declare pie chart variables in outer scope so resize handler can access them
+    let pieChart, pieValidatedChart, pieNotValidatedChart;
+    (function() {
+        // Use masterLabels and colorMap so the same type keeps the same color
+        const values = masterLabels.map(l => Number(typeData[l] || 0));
+        const total = values.reduce((s, v) => s + (Number(v) || 0), 0) || 1;
+
+        // Filter out zero-value slices from legend/chart for this dataset
+        const filtered = masterLabels.map((l, i) => ({ label: l, value: values[i], color: colorMap[l] }))
+            .filter(x => Number(x.value) > 0);
+
+        const labelsWithPct = filtered.map(x => `${x.label} — ${((x.value / total) * 100).toFixed(1)}%`);
+        const dataValues = filtered.map(x => x.value);
+        const bg = filtered.map(x => x.color);
+
+    pieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labelsWithPct,
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: bg,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { bottom: 12 } },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", size: 12 },
+                            boxWidth: 12,
+                            padding: 10,
+                            usePointStyle: true
+                        }
+                    }
                 }
             }
+        });
+    })();
+
+    // Pie chart - Validados
+    const validatedTypeData = stats.validated_by_type || {};
+    const pieValidatedCtx = document.getElementById('pieChartValidated').getContext('2d');
+    (function() {
+        // Build values aligned to masterLabels so colors remain consistent
+        const values = masterLabels.map(l => Number(validatedTypeData[l] || 0));
+        const total = values.reduce((s, v) => s + (Number(v) || 0), 0) || 1;
+
+        const filtered = masterLabels.map((l, i) => ({ label: l, value: values[i], color: colorMap[l] }))
+            .filter(x => Number(x.value) > 0);
+
+        const labelsWithPct = filtered.map(x => `${x.label} — ${((x.value / total) * 100).toFixed(1)}%`);
+        const dataValues = filtered.map(x => x.value);
+        const bg = filtered.map(x => x.color);
+
+    pieValidatedChart = new Chart(pieValidatedCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labelsWithPct,
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: bg,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { bottom: 12 } },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", size: 12 }, boxWidth: 12, padding: 10, usePointStyle: true }
+                    }
+                }
+            }
+        });
+    })();
+
+    // Pie chart - No Validados
+    const notValidatedTypeData = stats.not_validated_by_type || {};
+    const pieNotValidatedCtx = document.getElementById('pieChartNotValidated').getContext('2d');
+    (function() {
+        const values = masterLabels.map(l => Number(notValidatedTypeData[l] || 0));
+        const total = values.reduce((s, v) => s + (Number(v) || 0), 0) || 1;
+
+        const filtered = masterLabels.map((l, i) => ({ label: l, value: values[i], color: colorMap[l] }))
+            .filter(x => Number(x.value) > 0);
+
+        const labelsWithPct = filtered.map(x => `${x.label} — ${((x.value / total) * 100).toFixed(1)}%`);
+        const dataValues = filtered.map(x => x.value);
+        const bg = filtered.map(x => x.color);
+
+    pieNotValidatedChart = new Chart(pieNotValidatedCtx, {
+            type: 'doughnut',
+            data: {
+                labels: labelsWithPct,
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: bg,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { bottom: 12 } },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", size: 12 }, boxWidth: 12, padding: 10, usePointStyle: true }
+                    }
+                }
+            }
+        });
+    })();
+
+    // Set progress bar widths from data-width attributes (avoids inline Jinja in style)
+    document.querySelectorAll('.progress-bar[data-width]').forEach(function(pb) {
+        const w = pb.getAttribute('data-width');
+        if (w !== null) {
+            pb.style.width = w + '%';
+            if (!pb.textContent.trim()) pb.textContent = w + '%';
         }
     });
+
+    // Debounce helper for resize
+    function debounce(fn, wait) {
+        let t = null;
+        return function() {
+            const args = arguments;
+            clearTimeout(t);
+            t = setTimeout(function() { fn.apply(null, args); }, wait);
+        };
+    }
+
+    // Resize handler to force Chart.js to redraw
+    const handleResize = debounce(function() {
+        [typeChart, pieChart, pieValidatedChart, pieNotValidatedChart].forEach(function(c) {
+            try { c.resize(); } catch (e) { /* ignore */ }
+        });
+    }, 150);
+
+    window.addEventListener('resize', handleResize);
 </script>
 {% endblock %}

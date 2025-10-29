@@ -14,12 +14,36 @@
                 </h6>
             </div>
             <div class="card-body">
-                <div style="height: 600px;">
+                <div style="height: 600px; position: relative;">
                     {# Determinar carpeta según estado y normalizar nombre #}
-                    {% if document.status == 'pending' %}
-                        <embed src="/uploads/pending/{{ document.filename|urlencode }}" type="application/pdf" width="100%" height="100%" />
-                    {% elif document.status == 'classified' or document.status == 'validated' %}
-                        <embed src="/uploads/classified/{{ document.document_type.name|urlencode }}/{{ document.filename|urlencode }}" type="application/pdf" width="100%" height="100%" />
+                    {% if document.status == 'pending' or document.status == 'classified' %}
+                        {% set pdf_url = "/uploads/pending/" + document.filename|urlencode %}
+                        <iframe src="{{ pdf_url }}" type="application/pdf" width="100%" height="100%" style="border: none;">
+                            <p>Su navegador no puede mostrar el PDF. 
+                                <a href="{{ pdf_url }}" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-download"></i> Descargar PDF
+                                </a>
+                            </p>
+                        </iframe>
+                        <div class="mt-2">
+                            <a href="{{ pdf_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Abrir en nueva pestaña
+                            </a>
+                        </div>
+                    {% elif document.status == 'validated' %}
+                        {% set pdf_url = "/uploads/classified/" + document.document_type.name|urlencode + "/" + document.filename|urlencode %}
+                        <iframe src="{{ pdf_url }}" type="application/pdf" width="100%" height="100%" style="border: none;">
+                            <p>Su navegador no puede mostrar el PDF. 
+                                <a href="{{ pdf_url }}" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-download"></i> Descargar PDF
+                                </a>
+                            </p>
+                        </iframe>
+                        <div class="mt-2">
+                            <a href="{{ pdf_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Abrir en nueva pestaña
+                            </a>
+                        </div>
                     {% else %}
                         <span class="text-danger">No se puede mostrar el PDF para este estado.</span>
                     {% endif %}
@@ -167,6 +191,9 @@
                 <a href="{{ url_for('index') }}" class="btn btn-secondary w-100 mb-2">
                     <i class="fas fa-arrow-left"></i> Volver al Dashboard
                 </a>
+                <a href="{{ url_for('pending_documents') }}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-clipboard-check"></i> Regresar al Menú Validar Documentos
+                </a>
                 {% if not document.is_validated %}
                 <hr>
                 <button class="btn btn-success w-100" onclick="showValidateModal()">
@@ -191,4 +218,84 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Validation Modal -->
+<div class="modal fade" id="validateModal" tabindex="-1" aria-labelledby="validateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="validateModalLabel">Validar Documento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="validateForm">
+                    <div class="mb-3">
+                        <label for="documentType" class="form-label">Tipo de Documento</label>
+                        <select class="form-select" id="documentType" required>
+                            <option value="">Seleccione un tipo...</option>
+                            <option value="Factura" {% if document.predicted_type and document.predicted_type.name == 'Factura' %}selected{% endif %}>Factura</option>
+                            <option value="Nota de Credito" {% if document.predicted_type and document.predicted_type.name == 'Nota de Credito' %}selected{% endif %}>Nota de Crédito</option>
+                            <option value="Nota de Debito" {% if document.predicted_type and document.predicted_type.name == 'Nota de Debito' %}selected{% endif %}>Nota de Débito</option>
+                            <option value="Remito" {% if document.predicted_type and document.predicted_type.name == 'Remito' %}selected{% endif %}>Remito</option>
+                            <option value="Desconocido" {% if document.predicted_type and document.predicted_type.name == 'Desconocido' %}selected{% endif %}>Desconocido</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="validatedBy" class="form-label">Validado por</label>
+                        <input type="text" class="form-control" id="validatedBy" value="Usuario" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="validateDocument()">Validar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showValidateModal() {
+        var modal = new bootstrap.Modal(document.getElementById('validateModal'));
+        modal.show();
+    }
+
+    function validateDocument() {
+        const docType = document.getElementById('documentType').value;
+        const user = document.getElementById('validatedBy').value;
+
+        if (!docType) {
+            showToast('Por favor seleccione un tipo de documento', 'warning');
+            return;
+        }
+
+        fetch('/api/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                document_id: {{ document.id }},
+                document_type: docType,
+                user: user
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Documento validado correctamente', 'success');
+                // small delay to allow the toast to appear before reloading
+                setTimeout(() => location.reload(), 900);
+            } else {
+                showToast('Error al validar documento: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error al validar documento', 'danger');
+        });
+    }
+</script>
 {% endblock %}

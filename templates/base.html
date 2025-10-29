@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <style>
         :root {
@@ -241,6 +243,9 @@
         </div>
     </div>
     
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <!-- Bootstrap JS -->
@@ -271,77 +276,99 @@
         
         // Process documents
         function processDocuments() {
-            if (!confirm('¿Desea procesar todos los documentos pendientes?')) return;
-            
-            showLoading();
-            fetch('/api/process', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                alert('Error: ' + error);
+            showConfirm('¿Desea procesar todos los documentos pendientes?', 'Procesar documentos')
+            .then(confirmed => {
+                if (!confirmed) return;
+                showLoading();
+                fetch('/api/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        setTimeout(() => location.reload(), 700);
+                    } else {
+                        showToast('Error: ' + data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error: ' + error, 'danger');
+                });
             });
         }
         
         // Retrain model
         function retrainModel() {
-            if (!confirm('¿Desea reentrenar el modelo de Machine Learning?')) return;
-            
-            showLoading();
-            fetch('/api/retrain-model', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                if (data.success) {
-                    alert(data.message);
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                alert('Error: ' + error);
+            showConfirm('¿Desea reentrenar el modelo de Machine Learning?', 'Reentrenar modelo')
+            .then(confirmed => {
+                if (!confirmed) return;
+                showLoading();
+                fetch('/api/retrain-model', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                    } else {
+                        showToast('Error: ' + data.error, 'danger');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showToast('Error: ' + error, 'danger');
+                });
             });
         }
         
-        // Show toast notification
+        // Show toast notification using SweetAlert2 toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'bottom-end',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+            customClass: { popup: 'swal2-toast' }
+        });
+
         function showToast(message, type = 'info') {
-            const toastHtml = `
-                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">${message}</div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                    </div>
-                </div>
-            `;
-            const toastContainer = document.createElement('div');
-            toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
-            toastContainer.style.zIndex = '11';
-            toastContainer.innerHTML = toastHtml;
-            document.body.appendChild(toastContainer);
-            
-            const toast = new bootstrap.Toast(toastContainer.querySelector('.toast'));
-            toast.show();
-            
-            setTimeout(() => toastContainer.remove(), 5000);
+            const iconMap = {
+                'success': 'success',
+                'danger': 'error',
+                'error': 'error',
+                'warning': 'warning',
+                'info': 'info'
+            };
+            const icon = iconMap[type] || 'info';
+            Toast.fire({ icon: icon, title: message });
+        }
+
+        // Show confirm dialog using SweetAlert2, returns Promise<boolean>
+        function showConfirm(message, title = 'Confirmar') {
+            return Swal.fire({
+                title: title,
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                // Use Bootstrap button classes for consistent look
+                customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false,
+                // Use app primary color on confirm (fallback for non-Bootstrap renderers)
+                confirmButtonColor: '#4e73df',
+                cancelButtonColor: '#6c757d'
+            }).then(result => result.isConfirmed);
         }
     </script>
     
