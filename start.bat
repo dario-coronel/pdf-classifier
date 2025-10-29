@@ -50,6 +50,18 @@ echo.
 echo [5/5] Initializing application...
 python init.py
 
+REM Optional: regenerate static HTML docs (can be skipped with 'nogen' arg)
+if not "%1"=="nogen" (
+    if exist "tools\gen_docs.bat" (
+        echo Regenerating manual HTML files...
+        call tools\gen_docs.bat
+    ) else (
+        echo tools\gen_docs.bat not found; skipping documentation generation
+    )
+) else (
+    echo Skipping docs generation (nogen)
+)
+
 echo.
 echo ================================================
 echo Setup completed!
