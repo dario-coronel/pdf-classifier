@@ -60,18 +60,8 @@ if (-not (Test-Path -Path ".env")) {
 Write-Host "`n[6/6] Initializing application..." -ForegroundColor Yellow
 python init.py
 
-if (-not $NoGen) {
-    Write-Host "`nRegenerating manual HTML files (this may take a moment)..." -ForegroundColor Green
-    # Prefer using the Python converter to avoid shell-specific issues
-    python tools\md_to_html.py
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Warning: Failed to regenerate manual HTML (exit code $LASTEXITCODE)" -ForegroundColor Yellow
-    } else {
-        Write-Host "Docs generated in manual/html" -ForegroundColor Green
-    }
-} else {
-    Write-Host "Skipping docs regeneration (-NoGen specified)." -ForegroundColor Cyan
-}
+Write-Host "`nNote: Automatic docs regeneration has been disabled to restore previous behavior."
+Write-Host "If you need to regenerate the manual HTML files, run: python tools\md_to_html.py or tools\gen_docs.bat" -ForegroundColor Yellow
 
 Write-Host "`nSetup completed. To start the app run:`n    python app.py" -ForegroundColor Cyan
 Write-Host "Open your browser at http://localhost:5000" -ForegroundColor Cyan
