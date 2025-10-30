@@ -225,6 +225,47 @@ En la vista `Configuración` ahora hay botones para abrir carpetas directamente 
 Importante: Esto solo funciona si la aplicación se está ejecutando en la misma máquina (localhost) y en modo debug (desarrollo). Si accedés a la app desde otra máquina o en producción, la acción fallará de forma segura y la UI mostrará la ruta que debés abrir manualmente.
 
 ### Notas para desarrolladores
+## 🧭 Cómo arrancar en Windows (resumen de scripts)
+
+Hicimos disponibles varios scripts para diferentes flujos y shells. Todos los scripts regeneran la documentación estática (`manual/html/`) por defecto, pero ofrecen una opción para omitir esa regeneración si preferís arrancar más rápido.
+
+- CMD / Command Prompt:
+  - Arrancar la app (regenera docs por defecto):
+    ```cmd
+    run.bat
+    ```
+  - Arrancar sin regenerar documentación:
+    ```cmd
+    run.bat ngen
+    ```
+
+- Setup rápido (instala dependencias e inicializa) en CMD:
+  - Ejecuta:
+    ```cmd
+    start.bat
+    ```
+  - Para omitir la regeneración de docs durante el setup:
+    ```cmd
+    start.bat ngen
+    ```
+
+- PowerShell (recomendado si trabajás en PowerShell):
+  - Ejecutar setup + regenerar docs (por defecto):
+    ```powershell
+    .\start.ps1
+    ```
+  - Ejecutar setup sin regenerar docs:
+    ```powershell
+    .\start.ps1 -NoGen
+    ```
+
+Notas:
+- Si preferís regenerar la documentación manualmente, podés usar el script:
+  ```cmd
+  tools\gen_docs.bat
+  ```
+- Los HTML generados se escriben en `manual/html/`.
+
 
 - La ruta del backend para esta acción es `POST /api/open-folder` y está protegida para que funcione únicamente en `app.debug == True`.
 - El servidor valida `subfolder` contra la lista de tipos definida en `Config.DOCUMENT_TYPES` para evitar abrir rutas arbitrarias.
