@@ -151,6 +151,38 @@
         }
     </style>
     
+    {# Jinja macro to map document type name -> CSS badge class (server-side) #}
+    {% macro doc_type_class(name) -%}
+        {%- set n = (name or '')|lower -%}
+        {%- if 'factura' in n -%}
+            badge-factura
+        {%- elif 'nota' in n and ('deb' in n or 'debit' in n or 'debito' in n) -%}
+            badge-nota-debito
+        {%- elif 'nota' in n and ('cred' in n or 'credito' in n) -%}
+            badge-nota-credito
+        {%- elif 'remito' in n -%}
+            badge-remito
+        {%- else -%}
+            badge-desconocido
+        {%- endif -%}
+    {%- endmacro %}
+
+    <!-- Custom site CSS (badge color classes) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+
+    <!-- JS helper to map document type name -> badge class (client-side) -->
+    <script>
+        function docTypeClassJS(name) {
+            if (!name) return 'badge-desconocido';
+            const n = String(name).toLowerCase();
+            if (n.includes('factura')) return 'badge-factura';
+            if (n.includes('nota') && (n.includes('deb') || n.includes('debit') || n.includes('debito'))) return 'badge-nota-debito';
+            if (n.includes('nota') && (n.includes('cred') || n.includes('credito'))) return 'badge-nota-credito';
+            if (n.includes('remito')) return 'badge-remito';
+            return 'badge-desconocido';
+        }
+    </script>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>

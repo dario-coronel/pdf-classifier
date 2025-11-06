@@ -184,7 +184,7 @@
         
         documents.forEach(doc => {
             const statusBadge = getStatusBadge(doc.status);
-            const typeBadge = doc.document_type ? `<span class="badge bg-info">${doc.document_type}</span>` : '-';
+            const typeBadge = doc.document_type ? `<span class="badge ${docTypeClassJS(doc.document_type)}">${doc.document_type}</span>` : `<span class="badge badge-desconocido">Sin clasificar</span>`;
             
             tableHtml += `
                 <tr>

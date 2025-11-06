@@ -66,9 +66,9 @@
                     <div class="col-sm-4 font-weight-bold">Tipo de Documento:</div>
                     <div class="col-sm-8">
                         {% if document.document_type %}
-                        <span class="badge bg-info">{{ document.document_type.name }}</span>
+                        <span class="badge {{ doc_type_class(document.document_type.name) }}">{{ document.document_type.name }}</span>
                         {% else %}
-                        <span class="text-muted">Sin clasificar</span>
+                        <span class="badge badge-desconocido">Sin clasificar</span>
                         {% endif %}
                     </div>
                 </div>

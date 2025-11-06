@@ -161,9 +161,9 @@
                                 </td>
                                 <td>
                                     {% if doc.document_type %}
-                                        <span class="badge bg-info">{{ doc.document_type.name }}</span>
+                                        <span class="badge {{ doc_type_class(doc.document_type.name) }}">{{ doc.document_type.name }}</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">Sin clasificar</span>
+                                        <span class="badge badge-desconocido">Sin clasificar</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -246,9 +246,19 @@
         'rgba(255, 159, 64, 0.9)'   // orange
     ];
 
-    // Map type name => color (deterministic by index in masterLabels)
+    // Fixed known-type color overrides so badges and charts match the UI mapping
+    const fixedColorMap = {
+        'Factura': 'rgba(28, 200, 138, 0.9)',
+        'Nota de Debito': 'rgba(231, 74, 59, 0.9)',
+        'Nota de Crédito': 'rgba(246, 194, 62, 0.95)',
+        'Nota de Credito': 'rgba(246, 194, 62, 0.95)',
+        'Remito': 'rgba(78, 115, 223, 0.9)',
+        'Desconocido': 'rgba(108, 117, 125, 0.9)'
+    };
+
+    // Map type name => color (deterministic by name or fallback to palette by index)
     const colorMap = {};
-    masterLabels.forEach((lbl, i) => { colorMap[lbl] = palette[i % palette.length]; });
+    masterLabels.forEach((lbl, i) => { colorMap[lbl] = fixedColorMap[lbl] || palette[i % palette.length]; });
 
     // Helper to build a color array for a list of labels
     const colorsFor = (labels) => labels.map(l => colorMap[l] || 'rgba(128,128,128,0.8)');

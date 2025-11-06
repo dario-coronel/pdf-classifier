@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 import re
 from config import Config
+from services.rules import apply_rule_boost
 
 
 class DocumentClassifier:
@@ -129,10 +130,24 @@ class DocumentClassifier:
             confidence = float(probabilities[predicted_idx])
             predicted_type = self.reverse_label_encoder.get(predicted_idx, "Desconocido")
             
-            # If ML confidence is low, use rule-based
+            # Build probability mapping label -> prob
+            probs = {self.reverse_label_encoder.get(i, 'Desconocido'): float(p)
+                     for i, p in enumerate(probabilities)}
+
+            # Apply rule-based boost/override (post-process)
+            final_label, reason = apply_rule_boost(predicted_type, probs, text)
+
+            # If reason indicates a rule override/boost, we may want to log it (print for now)
+            if reason != 'no_rule' and final_label != predicted_type:
+                # prefer returning a confidence consistent with probs
+                final_conf = probs.get(final_label, confidence)
+                print(f"Rule applied: {reason} -> {final_label} (from {predicted_type})")
+                return final_label, float(final_conf)
+
+            # If ML confidence is low, use rule-based fallback computed earlier
             if confidence < Config.MIN_CONFIDENCE and rule_confidence > confidence:
                 return rule_based_type, rule_confidence
-            
+
             return predicted_type, confidence
             
         except Exception as e:
@@ -205,6 +220,18 @@ class DocumentClassifier:
         texts = [doc['text'] for doc in documents_data]
         labels = [doc['type'] for doc in documents_data]
         
+        # Check class distribution
+        from collections import Counter
+        label_counts = Counter(labels)
+        print(f"Class distribution: {dict(label_counts)}")
+        
+        # Check if each class has at least 2 examples (required for stratified split)
+        min_samples_per_class = min(label_counts.values())
+        if min_samples_per_class < 2:
+            print(f"Error: Some classes have less than 2 examples. Cannot perform stratified split.")
+            print(f"Classes with insufficient data: {[label for label, count in label_counts.items() if count < 2]}")
+            return False
+        
         # Update label encoder
         unique_labels = list(set(labels))
         self.label_encoder = {label: idx for idx, label in enumerate(unique_labels)}
@@ -214,20 +241,34 @@ class DocumentClassifier:
         X = self.vectorizer.fit_transform(texts)
         y = np.array([self.label_encoder[label] for label in labels])
         
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
-        
-        # Train
-        self.model.fit(X_train, y_train)
-        
-        # Evaluate
-        y_pred = self.model.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
-        
-        print(f"Model retrained with {len(documents_data)} documents")
-        print(f"Accuracy: {accuracy:.2%}")
+        # Only use train_test_split if we have enough data for meaningful evaluation
+        # For small datasets, train on all data
+        if len(documents_data) >= 20:
+            try:
+                # Split data with stratification
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=0.2, random_state=42, stratify=y
+                )
+                
+                # Train
+                self.model.fit(X_train, y_train)
+                
+                # Evaluate
+                y_pred = self.model.predict(X_test)
+                accuracy = accuracy_score(y_test, y_pred)
+                
+                print(f"Model retrained with {len(documents_data)} documents")
+                print(f"Test accuracy: {accuracy:.2%}")
+                
+            except ValueError as e:
+                # Fallback: train on all data if stratification fails
+                print(f"Stratification failed: {e}. Training on all data.")
+                self.model.fit(X, y)
+                print(f"Model retrained with {len(documents_data)} documents (no test split)")
+        else:
+            # For small datasets, train on all data
+            self.model.fit(X, y)
+            print(f"Model retrained with {len(documents_data)} documents (too few for test split)")
         
         return True
     

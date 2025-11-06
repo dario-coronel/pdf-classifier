@@ -1,0 +1,31 @@
+/* Custom badge colors for document types */
+.badge-factura {
+    background-color: #1cc88a; /* green */
+    color: #ffffff;
+}
+
+.badge-nota-debito {
+    background-color: #e74a3b; /* red */
+    color: #ffffff;
+}
+
+.badge-nota-credito {
+    background-color: #f6c23e; /* yellow */
+    color: #212529; /* dark text on yellow */
+}
+
+.badge-remito {
+    background-color: #4e73df; /* blue */
+    color: #ffffff;
+}
+
+.badge-desconocido {
+    background-color: #6c757d; /* gray */
+    color: #ffffff;
+}
+
+/* Keep padding/weight consistent with existing .badge rules in base.css */
+.badge {
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+}

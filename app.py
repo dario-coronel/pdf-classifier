@@ -218,17 +218,23 @@ def api_retrain_model():
         if success:
             return jsonify({
                 'success': True,
-                'message': 'Model retrained successfully'
+                'message': 'Modelo reentrenado exitosamente'
             })
         else:
             return jsonify({
                 'success': False,
-                'error': 'Not enough training data or retraining failed'
+                'error': 'No hay suficientes datos de entrenamiento. Asegúrate de validar al menos 2 documentos de cada tipo (Factura, Nota de Débito, Nota de Crédito, Remito).'
             }), 400
     except Exception as e:
+        error_msg = str(e)
+        if 'least populated class' in error_msg or 'less than 2' in error_msg:
+            return jsonify({
+                'success': False,
+                'error': 'Algunas categorías tienen muy pocos ejemplos. Valida al menos 2 documentos de cada tipo antes de reentrenar.'
+            }), 400
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': f'Error al reentrenar: {error_msg}'
         }), 500
 
 @app.route('/api/open-folder', methods=['POST'])
